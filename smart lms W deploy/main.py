@@ -15,7 +15,7 @@ import requests
 import threading
 from werkzeug.security import generate_password_hash, check_password_hash
 import secrets
-import fitz  # PyMuPDF
+import fitz # PyMuPDF
 from google.api_core import client_options
 import socket
 
@@ -124,7 +124,7 @@ def send_email_async(recipient_email, otp):
     thread = threading.Thread(target=send_otp_email, args=(recipient_email, otp))
     thread.daemon = True
     thread.start()
-    return True  # Assume it will be sent
+    return True # Assume it will be sent
 
 # --- Helper & Decorator Functions ---
 def allowed_file(filename):
@@ -438,6 +438,10 @@ def course_detail(course_id):
 
     for material in materials:
         material['quiz'] = mongo.db.quizzes.find_one({"material_id": material['_id']})
+        # Add quiz history link data if student is enrolled
+        if current_user_role == 'student' and material.get('quiz'):
+            material['quiz']['history_link'] = url_for('quiz_history', quiz_id=material['quiz']['_id'])
+
 
     # Fixed timezone handling
     now_utc = datetime.now(pytz.utc)
@@ -474,49 +478,36 @@ def course_detail(course_id):
 
     return render_template('course_detail.html', course=course, materials=materials, assignments=assignments)
 
-# ... (rest of your routes remain the same, but make sure to use the fixed email functions)
+# --- NEW QUIZ PERFORMANCE ROUTES ---
 
-@app.route('/api/register', methods=['POST'])
-def api_register():
-    email = request.form.get('email')
-    username = request.form.get('username')
-    role = request.form.get('role')
-    if mongo.db.users.find_one({"email": email}):
-        flash("An account with this email already exists.", "warning")
-        return redirect(url_for('login'))
-    otp = str(random.randint(100000, 999999))
-    otp_expiry = datetime.utcnow() + timedelta(minutes=10)
-    
-    # Use async email sending to prevent timeouts
-    if not send_email_async(email, otp):
-        flash("Could not send verification email.", "danger")
-        return redirect(url_for('register'))
-    
-    mongo.db.temp_users.update_one(
-        {"email": email},
-        {"$set": {"username": username, "role": role, "otp": otp, "otp_expiry": otp_expiry}},
-        upsert=True
-    )
-    flash(f"A verification code has been sent to {email}.", "success")
-    return redirect(url_for('verify_page', email=email))
-
-
-@app.route('/create-course', methods=['GET', 'POST'])
+@app.route('/quiz/<quiz_id>/history')
 @login_required
-@teacher_or_admin_required
-def create_course():
-    if request.method == 'POST':
-        mongo.db.courses.insert_one({
-            "title": request.form.get('course_title'), "description": request.form.get('course_description'),
-            "category": request.form.get('course_category'), "icon": "fa-book",
-            "teacher_id": ObjectId(session['user_id']), "created_at": datetime.utcnow()
-        })
-        flash("Course created successfully!", "success")
-        return redirect(url_for('my_courses'))
-    return render_template('create_course.html')
+def quiz_history(quiz_id):
+    """Shows all previous attempts for a single quiz for the current user."""
+    quiz_oid = ObjectId(quiz_id)
+    user_id = ObjectId(session['user_id'])
+    
+    quiz = mongo.db.quizzes.find_one_or_404({"_id": quiz_oid})
+    
+    material = mongo.db.materials.find_one({"_id": quiz['material_id']})
+    
+    if session.get('role') != 'student':
+        flash("Only students can view quiz history.", "danger")
+        return redirect(url_for('dashboard'))
 
-# In app.py, replace the entire course_detail function
-# In app.py, replace the entire course_detail function
+    # Find all attempts by the current user for this quiz
+    attempts = list(mongo.db.quiz_attempts.find({
+        "quiz_id": quiz_oid,
+        "user_id": user_id
+    }).sort("submitted_at", -1)) # Sort by most recent first
+    
+    # Calculate the student's highest score
+    highest_score = 0
+    if attempts:
+        highest_score = max(attempt.get('score', 0) for attempt in attempts)
+
+    return render_template('quiz_history.html', quiz=quiz, attempts=attempts, highest_score=highest_score, material=material)
+
 # Add this new route to app.py
 @app.route('/course/<course_id>/students')
 @login_required
@@ -554,6 +545,7 @@ def enrolled_students(course_id):
             student['pending_count'] = 0
 
     return render_template('enrolled_students.html', course=course, students=enrolled_users, total_assignments=total_assignments)
+
 # Add this new route to app.py
 @app.route('/course/<course_id>/student/<student_id>')
 @login_required
@@ -594,6 +586,64 @@ def student_detail(course_id, student_id):
     }
     
     return render_template('student_detail.html', course=course, student=student, assignments=assignments, stats=stats, now=datetime)
+
+@app.route('/course/<course_id>/quiz-performance')
+@login_required
+def course_quiz_performance(course_id):
+    """Shows aggregated quiz performance for a student in a specific course."""
+    course_oid = ObjectId(course_id)
+    user_id = ObjectId(session['user_id'])
+    
+    course = mongo.db.courses.find_one_or_404({"_id": course_oid})
+    
+    if session.get('role') != 'student':
+        flash("You do not have permission to view course performance.", "danger")
+        return redirect(url_for('course_detail', course_id=course_id))
+
+    # 1. Get all quizzes for the course
+    course_quizzes = list(mongo.db.quizzes.find({"course_id": course_oid}))
+    
+    performance_data = []
+    total_quizzes_available = len(course_quizzes)
+    total_completed_quizzes = 0
+
+    for quiz in course_quizzes:
+        # 2. Find all attempts by the user for this quiz
+        attempts = list(mongo.db.quiz_attempts.find({
+            "quiz_id": quiz['_id'],
+            "user_id": user_id
+        }).sort("submitted_at", -1))
+        
+        quiz_data = {
+            "title": quiz['title'],
+            "quiz_id": str(quiz['_id']),
+            "attempts": len(attempts),
+            "highest_score": 0,
+            "max_score": 0,
+            "material_id": str(quiz.get('material_id'))
+        }
+        
+        if attempts:
+            total_questions = attempts[0].get('total_questions', 0)
+            quiz_data['max_score'] = total_questions
+            quiz_data['highest_score'] = max(attempt.get('score', 0) for attempt in attempts)
+            
+            if attempts: # Check if there's at least one attempt to count as "attempted"
+                total_completed_quizzes += 1
+
+        performance_data.append(quiz_data)
+
+    stats = {
+        "quizzes_completed": total_completed_quizzes,
+        "total_quizzes": total_quizzes_available,
+        "completion_rate": int((total_completed_quizzes / total_quizzes_available * 100) if total_quizzes_available > 0 else 0)
+    }
+
+    return render_template('course_quiz_performance.html', course=course, performance_data=performance_data, stats=stats)
+
+
+# --- REST OF THE ROUTES ---
+
 @app.route('/upload-material/<course_id>', methods=['POST'])
 @login_required
 @teacher_or_admin_required
@@ -1162,10 +1212,27 @@ def performance():
 
                 completion = (viewed_materials_count / total_materials * 100) if total_materials > 0 else 0
                 
+                # --- START: Quiz Performance Logic ---
+                quizzes = list(mongo.db.quizzes.find({"course_id": course_id}))
+                total_quizzes = len(quizzes)
+                total_quizzes_attempted = 0
+                
+                if total_quizzes > 0:
+                    quiz_ids = [q['_id'] for q in quizzes]
+                    # Find all unique quiz IDs the user has attempted within this course
+                    attempted_quiz_ids = mongo.db.quiz_attempts.distinct("quiz_id", {
+                        "user_id": user_id,
+                        "quiz_id": {"$in": quiz_ids}
+                    })
+                    total_quizzes_attempted = len(attempted_quiz_ids)
+
                 courses_data.append({
                     "title": course['title'],
-                    "completion": int(completion)
+                    "completion": int(completion),
+                    "quiz_attempt_rate": int((total_quizzes_attempted / total_quizzes * 100) if total_quizzes > 0 else 0),
+                    "course_id": str(course_id)
                 })
+                # --- END: Quiz Performance Logic ---
         return render_template('student_performance.html', courses_data=courses_data)
 
     elif user['role'] in ['teacher', 'admin']:
@@ -1748,7 +1815,3 @@ def send_api_message(conversation_id):
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port, debug=False)
-
-
-
-
