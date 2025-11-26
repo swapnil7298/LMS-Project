@@ -517,70 +517,6 @@ def create_course():
 
 # In app.py, replace the entire course_detail function
 # In app.py, replace the entire course_detail function
-@app.route('/course/<course_id>')
-@login_required
-def course_detail(course_id):
-    course_object_id = ObjectId(course_id)
-    course = mongo.db.courses.find_one_or_404({"_id": course_object_id})
-    current_user_role = session.get('role')
-    current_user_id = session.get('user_id')
-
-    # Permission checks remain the same...
-    is_admin = current_user_role == 'admin'
-    is_teacher = current_user_role == 'teacher' and (str(course.get('teacher_id')) == current_user_id or course.get('teacher_id') is None)
-    is_enrolled_student = False
-    if current_user_role == 'student':
-        user = mongo.db.users.find_one({"_id": ObjectId(current_user_id)})
-        if user and 'enrolled_courses' in user and course_object_id in user['enrolled_courses']:
-            is_enrolled_student = True
-    if not (is_admin or is_teacher or is_enrolled_student):
-        flash("You do not have permission to view this course.", "danger")
-        return redirect(url_for('my_courses'))
-    
-    materials = list(mongo.db.materials.find({"course_id": course_object_id}))
-    assignments = list(mongo.db.assignments.find({"course_id": course_object_id}))
-
-    for material in materials:
-        material['quiz'] = mongo.db.quizzes.find_one({"material_id": material['_id']})
-
-    # --- THIS IS THE FIX ---
-    now_utc = datetime.now(pytz.utc) # This is AWARE
-    for assignment in assignments:
-        due_date_naive = assignment.get('due_date') # This is NAIVE
-        if due_date_naive:
-            # Make the naive date from the DB aware of the UTC timezone
-            due_date_aware = due_date_naive.replace(tzinfo=pytz.utc) 
-            assignment['is_submittable'] = due_date_aware > now_utc
-            
-            if current_user_role == 'student':
-                submission = mongo.db.submissions.find_one({
-                    "assignment_id": assignment['_id'],
-                    "student_id": ObjectId(current_user_id)
-                })
-                assignment['submission'] = submission
-                
-                can_edit = False
-                if submission:
-                    is_not_graded = submission.get('grade') is None
-                    # Compare two AWARE datetimes
-                    is_before_due_date = due_date_aware > now_utc
-                    if is_not_graded and is_before_due_date:
-                        can_edit = True
-                assignment['can_edit'] = can_edit
-        # --- END OF FIX ---
-
-        # This part only runs if the assignment has no due date
-        elif current_user_role == 'student':
-            assignment['submission'] = mongo.db.submissions.find_one({
-                "assignment_id": assignment['_id'], "student_id": ObjectId(current_user_id)
-            })
-            assignment['can_edit'] = False # Can't edit if no due date is set
-
-        if current_user_role in ['teacher', 'admin']:
-            count = mongo.db.submissions.count_documents({"assignment_id": assignment['_id']})
-            assignment['submission_count'] = count
-
-    return render_template('course_detail.html', course=course, materials=materials, assignments=assignments)
 # Add this new route to app.py
 @app.route('/course/<course_id>/students')
 @login_required
@@ -1812,6 +1748,7 @@ def send_api_message(conversation_id):
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port, debug=False)
+
 
 
 
