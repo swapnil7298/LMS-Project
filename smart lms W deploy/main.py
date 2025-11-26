@@ -500,20 +500,6 @@ def api_register():
     flash(f"A verification code has been sent to {email}.", "success")
     return redirect(url_for('verify_page', email=email))
 
-@app.route('/my-courses')
-@login_required
-def my_courses():
-    user = mongo.db.users.find_one({"_id": ObjectId(session['user_id'])})
-    courses = []
-    if user['role'] == 'admin':
-        courses = list(mongo.db.courses.find({}))
-    elif user['role'] == 'teacher':
-        query = {"$or": [{"teacher_id": user['_id']}, {"teacher_id": None}]}
-        courses = list(mongo.db.courses.find(query))
-    elif user['role'] == 'student':
-        enrolled_course_ids = user.get('enrolled_courses', [])
-        courses = list(mongo.db.courses.find({"_id": {"$in": enrolled_course_ids}}))
-    return render_template('my_courses.html', courses=courses)
 
 @app.route('/create-course', methods=['GET', 'POST'])
 @login_required
@@ -1826,5 +1812,6 @@ def send_api_message(conversation_id):
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port, debug=False)
+
 
 
