@@ -15,7 +15,7 @@ import requests
 import threading
 from werkzeug.security import generate_password_hash, check_password_hash
 import secrets
-import fitz # PyMuPDF
+import fitz  # PyMuPDF
 from google.api_core import client_options
 import socket
 
@@ -78,11 +78,15 @@ def send_otp_email(recipient_email, otp):
         print("SMTP credentials not configured")
         return False
     
-    msg = EmailMessage()
-    msg['Subject'] = "Your IntelliLearn Verification Code"
-    msg['From'] = SENDER_EMAIL
-    msg['To'] = recipient_email
-    msg.set_content(f"Your One-Time Password (OTP) is: {otp}\n\nThis code will expire in 10 minutes.")
+    # Use simple string message for better compatibility
+    message = f"""Subject: Your IntelliLearn Verification Code
+
+Your One-Time Password (OTP) is: {otp}
+
+This code will expire in 10 minutes.
+
+If you didn't request this code, please ignore this email.
+"""
     
     try:
         # Try multiple SMTP configurations with timeout
@@ -95,20 +99,23 @@ def send_otp_email(recipient_email, otp):
             try:
                 print(f"Trying SMTP server: {server}:{port}")
                 if port == 587:
-                    # TLS connection with timeout
-                    smtp = smtplib.SMTP(server, port, timeout=30)
+                    # TLS connection with shorter timeout
+                    smtp = smtplib.SMTP(server, port, timeout=15)
+                    smtp.ehlo()
                     smtp.starttls()
+                    smtp.ehlo()
                 else:
-                    # SSL connection with timeout
-                    smtp = smtplib.SMTP_SSL(server, port, timeout=30)
+                    # SSL connection with shorter timeout
+                    smtp = smtplib.SMTP_SSL(server, port, timeout=15)
+                    smtp.ehlo()
                 
                 smtp.login(SENDER_EMAIL, SENDER_PASSWORD)
-                smtp.send_message(msg)
+                smtp.sendmail(SENDER_EMAIL, recipient_email, message)
                 smtp.quit()
                 print(f"Email sent successfully via {server}:{port}")
                 return True
                 
-            except (smtplib.SMTPException, socket.timeout, ConnectionError) as e:
+            except (smtplib.SMTPException, socket.timeout, ConnectionError, Exception) as e:
                 print(f"Failed to send via {server}:{port} - {e}")
                 continue
                 
@@ -121,10 +128,16 @@ def send_otp_email(recipient_email, otp):
 
 def send_email_async(recipient_email, otp):
     """Send email in a separate thread to avoid blocking main request"""
-    thread = threading.Thread(target=send_otp_email, args=(recipient_email, otp))
+    def send_wrapper():
+        try:
+            send_otp_email(recipient_email, otp)
+        except Exception as e:
+            print(f"Async email error: {e}")
+    
+    thread = threading.Thread(target=send_wrapper)
     thread.daemon = True
     thread.start()
-    return True # Assume it will be sent
+    return True  # Assume it will be sent
 
 # --- Helper & Decorator Functions ---
 def allowed_file(filename):
@@ -289,22 +302,11 @@ def forgot_password():
             )
 
             reset_link = url_for('reset_password', token=token, _external=True)
-            SENDER_EMAIL = os.getenv("SENDER_EMAIL")
-            SENDER_PASSWORD = os.getenv("SENDER_PASSWORD")
             
-            msg = EmailMessage()
-            msg['Subject'] = "Your IntelliLearn Password Reset Link"
-            msg['From'] = SENDER_EMAIL
-            msg['To'] = email
-            msg.set_content(f"Click the link to reset your password: {reset_link}\nThis link will expire in one hour.")
-            
-            try:
-                # Use async email sending for password reset too
-                send_email_async(email, "Password Reset")  # Simplified for example
-                flash("A password reset link has been sent to your email.", "success")
-            except Exception as e:
-                print(f"Password reset email error: {e}")
-                flash("Could not send reset email. Please try again later.", "danger")
+            # Use async email for password reset
+            email_content = f"Click the link to reset your password: {reset_link}\nThis link will expire in one hour."
+            send_email_async(email, email_content)
+            flash("A password reset link has been sent to your email.", "success")
         else:
             flash("No account found with that email address.", "warning")
         
@@ -359,28 +361,14 @@ def contact():
         user_name = request.form.get('name')
         user_email = request.form.get('contact_email')
         message_body = request.form.get('message')
-        SENDER_EMAIL = os.getenv("SENDER_EMAIL")
-        SENDER_PASSWORD = os.getenv("SENDER_PASSWORD")
         ADMIN_EMAIL = app.config['ADMIN_EMAIL']
 
-        if not all([SENDER_EMAIL, SENDER_PASSWORD]):
-            flash("The contact form is currently unavailable. Please email the admin directly.", "warning")
-            return render_template('contact.html')
-
-        msg = EmailMessage()
-        msg['Subject'] = f"New Contact Form Message from {user_name}"
-        msg['From'] = SENDER_EMAIL
-        msg['To'] = ADMIN_EMAIL
-        msg.set_content(f"You have a new message from:\n\nName: {user_name}\nEmail: {user_email}\n\nMessage:\n{message_body}")
-
-        try:
-            # Use async email for contact form too
-            send_email_async(ADMIN_EMAIL, f"Contact form message from {user_name}")
-            flash("Your message has been sent successfully! We will get back to you shortly.", "success")
-            return redirect(url_for('contact'))
-        except Exception as e:
-            print(f"Contact form email error: {e}")
-            flash("Sorry, there was an error sending your message. Please try again later.", "danger")
+        # Use async email for contact form
+        email_content = f"New contact form message from {user_name} ({user_email}):\n\n{message_body}"
+        send_email_async(ADMIN_EMAIL, email_content)
+        
+        flash("Your message has been sent successfully! We will get back to you shortly.", "success")
+        return redirect(url_for('contact'))
 
     return render_template('contact.html')
 
@@ -399,15 +387,19 @@ def my_courses():
         courses = list(mongo.db.courses.find({"_id": {"$in": enrolled_course_ids}}))
     return render_template('my_courses.html', courses=courses)
 
+# FIXED: Only one create_course route definition
 @app.route('/create-course', methods=['GET', 'POST'])
 @login_required
 @teacher_or_admin_required
 def create_course():
     if request.method == 'POST':
         mongo.db.courses.insert_one({
-            "title": request.form.get('course_title'), "description": request.form.get('course_description'),
-            "category": request.form.get('course_category'), "icon": "fa-book",
-            "teacher_id": ObjectId(session['user_id']), "created_at": datetime.utcnow()
+            "title": request.form.get('course_title'), 
+            "description": request.form.get('course_description'),
+            "category": request.form.get('course_category'), 
+            "icon": "fa-book",
+            "teacher_id": ObjectId(session['user_id']), 
+            "created_at": datetime.utcnow()
         })
         flash("Course created successfully!", "success")
         return redirect(url_for('my_courses'))
@@ -438,10 +430,6 @@ def course_detail(course_id):
 
     for material in materials:
         material['quiz'] = mongo.db.quizzes.find_one({"material_id": material['_id']})
-        # Add quiz history link data if student is enrolled
-        if current_user_role == 'student' and material.get('quiz'):
-            material['quiz']['history_link'] = url_for('quiz_history', quiz_id=material['quiz']['_id'])
-
 
     # Fixed timezone handling
     now_utc = datetime.now(pytz.utc)
@@ -478,37 +466,6 @@ def course_detail(course_id):
 
     return render_template('course_detail.html', course=course, materials=materials, assignments=assignments)
 
-# --- NEW QUIZ PERFORMANCE ROUTES ---
-
-@app.route('/quiz/<quiz_id>/history')
-@login_required
-def quiz_history(quiz_id):
-    """Shows all previous attempts for a single quiz for the current user."""
-    quiz_oid = ObjectId(quiz_id)
-    user_id = ObjectId(session['user_id'])
-    
-    quiz = mongo.db.quizzes.find_one_or_404({"_id": quiz_oid})
-    
-    material = mongo.db.materials.find_one({"_id": quiz['material_id']})
-    
-    if session.get('role') != 'student':
-        flash("Only students can view quiz history.", "danger")
-        return redirect(url_for('dashboard'))
-
-    # Find all attempts by the current user for this quiz
-    attempts = list(mongo.db.quiz_attempts.find({
-        "quiz_id": quiz_oid,
-        "user_id": user_id
-    }).sort("submitted_at", -1)) # Sort by most recent first
-    
-    # Calculate the student's highest score
-    highest_score = 0
-    if attempts:
-        highest_score = max(attempt.get('score', 0) for attempt in attempts)
-
-    return render_template('quiz_history.html', quiz=quiz, attempts=attempts, highest_score=highest_score, material=material)
-
-# Add this new route to app.py
 @app.route('/course/<course_id>/students')
 @login_required
 @teacher_or_admin_required
@@ -546,7 +503,6 @@ def enrolled_students(course_id):
 
     return render_template('enrolled_students.html', course=course, students=enrolled_users, total_assignments=total_assignments)
 
-# Add this new route to app.py
 @app.route('/course/<course_id>/student/<student_id>')
 @login_required
 @teacher_or_admin_required
@@ -558,24 +514,18 @@ def student_detail(course_id, student_id):
     student = mongo.db.users.find_one_or_404({"_id": student_oid, "role": "student"})
 
     # --- Fetch all data related to this student in this course ---
-
-    # 1. Get all assignments for the course
     assignments = list(mongo.db.assignments.find({"course_id": course_oid}).sort("due_date", 1))
     
-    # 2. Get all of this student's submissions for those assignments
     submissions = list(mongo.db.submissions.find({
         "student_id": student_oid,
         "assignment_id": {"$in": [a['_id'] for a in assignments]}
     }))
     
-    # 3. Create a map for easy lookup
     submission_map = {s['assignment_id']: s for s in submissions}
 
-    # 4. Add the specific submission status to each assignment
     for assignment in assignments:
         assignment['submission'] = submission_map.get(assignment['_id'])
 
-    # 5. Calculate stats
     total_materials = mongo.db.materials.count_documents({"course_id": course_oid})
     viewed_materials = mongo.db.material_views.count_documents({"course_id": course_oid, "user_id": student_oid})
     
@@ -586,63 +536,6 @@ def student_detail(course_id, student_id):
     }
     
     return render_template('student_detail.html', course=course, student=student, assignments=assignments, stats=stats, now=datetime)
-
-@app.route('/course/<course_id>/quiz-performance')
-@login_required
-def course_quiz_performance(course_id):
-    """Shows aggregated quiz performance for a student in a specific course."""
-    course_oid = ObjectId(course_id)
-    user_id = ObjectId(session['user_id'])
-    
-    course = mongo.db.courses.find_one_or_404({"_id": course_oid})
-    
-    if session.get('role') != 'student':
-        flash("You do not have permission to view course performance.", "danger")
-        return redirect(url_for('course_detail', course_id=course_id))
-
-    # 1. Get all quizzes for the course
-    course_quizzes = list(mongo.db.quizzes.find({"course_id": course_oid}))
-    
-    performance_data = []
-    total_quizzes_available = len(course_quizzes)
-    total_completed_quizzes = 0
-
-    for quiz in course_quizzes:
-        # 2. Find all attempts by the user for this quiz
-        attempts = list(mongo.db.quiz_attempts.find({
-            "quiz_id": quiz['_id'],
-            "user_id": user_id
-        }).sort("submitted_at", -1))
-        
-        quiz_data = {
-            "title": quiz['title'],
-            "quiz_id": str(quiz['_id']),
-            "attempts": len(attempts),
-            "highest_score": 0,
-            "max_score": 0,
-            "material_id": str(quiz.get('material_id'))
-        }
-        
-        if attempts:
-            total_questions = attempts[0].get('total_questions', 0)
-            quiz_data['max_score'] = total_questions
-            quiz_data['highest_score'] = max(attempt.get('score', 0) for attempt in attempts)
-            
-            if attempts: # Check if there's at least one attempt to count as "attempted"
-                total_completed_quizzes += 1
-
-        performance_data.append(quiz_data)
-
-    stats = {
-        "quizzes_completed": total_completed_quizzes,
-        "total_quizzes": total_quizzes_available,
-        "completion_rate": int((total_completed_quizzes / total_quizzes_available * 100) if total_quizzes_available > 0 else 0)
-    }
-
-    return render_template('course_quiz_performance.html', course=course, performance_data=performance_data, stats=stats)
-
-
-# --- REST OF THE ROUTES ---
 
 @app.route('/upload-material/<course_id>', methods=['POST'])
 @login_required
@@ -705,7 +598,6 @@ def delete_material(material_id):
     
     mongo.db.materials.delete_one({"_id": ObjectId(material_id)})
     
-    # Return a JSON response instead of redirecting
     return jsonify({"success": True, "message": "Material deleted successfully."})
 
 @app.route('/submit-assignment/<assignment_id>', methods=['POST'])
@@ -945,8 +837,6 @@ def request_enrollment(course_id):
     flash("Your request to enroll has been sent for approval.", "success")
     return redirect(url_for('browse_courses'))
 
-# Add these new routes to app.py
-
 @app.route('/material/<material_id>/create-quiz', methods=['GET', 'POST'])
 @login_required
 @teacher_or_admin_required
@@ -954,17 +844,15 @@ def create_quiz(material_id):
     material = mongo.db.materials.find_one_or_404({"_id": ObjectId(material_id)})
     if request.method == 'POST':
         quiz_title = request.form.get('quiz_title')
-        # Create the quiz document
         quiz_id = mongo.db.quizzes.insert_one({
             'title': quiz_title,
             'material_id': ObjectId(material_id),
             'course_id': material['course_id'],
             'created_by': ObjectId(session['user_id']),
-            'type': 'manual', # Differentiating from future AI quizzes
+            'type': 'manual',
             'created_at': datetime.utcnow()
         }).inserted_id
 
-        # Loop through form data to get questions
         questions = []
         for key, value in request.form.items():
             if key.startswith('question_text_'):
@@ -1038,7 +926,6 @@ def quiz_results(attempt_id):
     quiz = mongo.db.quizzes.find_one_or_404({"_id": attempt['quiz_id']})
     questions = list(mongo.db.questions.find({'quiz_id': attempt['quiz_id']}))
     
-    # Add full question text and options to the results for display
     for result in attempt['results']:
         for q in questions:
             if str(q['_id']) == result['question_id']:
@@ -1212,27 +1099,10 @@ def performance():
 
                 completion = (viewed_materials_count / total_materials * 100) if total_materials > 0 else 0
                 
-                # --- START: Quiz Performance Logic ---
-                quizzes = list(mongo.db.quizzes.find({"course_id": course_id}))
-                total_quizzes = len(quizzes)
-                total_quizzes_attempted = 0
-                
-                if total_quizzes > 0:
-                    quiz_ids = [q['_id'] for q in quizzes]
-                    # Find all unique quiz IDs the user has attempted within this course
-                    attempted_quiz_ids = mongo.db.quiz_attempts.distinct("quiz_id", {
-                        "user_id": user_id,
-                        "quiz_id": {"$in": quiz_ids}
-                    })
-                    total_quizzes_attempted = len(attempted_quiz_ids)
-
                 courses_data.append({
                     "title": course['title'],
-                    "completion": int(completion),
-                    "quiz_attempt_rate": int((total_quizzes_attempted / total_quizzes * 100) if total_quizzes > 0 else 0),
-                    "course_id": str(course_id)
+                    "completion": int(completion)
                 })
-                # --- END: Quiz Performance Logic ---
         return render_template('student_performance.html', courses_data=courses_data)
 
     elif user['role'] in ['teacher', 'admin']:
@@ -1277,11 +1147,6 @@ def settings():
         return redirect(url_for('settings'))
     return render_template('settings.html')
 
-# app.py (Modified /summarize route)
-
-# app.py (Find this section near the bottom of your file, before the __main__ block)
-# app.py (CORRECTED /summarize route)
-
 @app.route('/summarize/<material_id>')
 @login_required
 def summarize(material_id):
@@ -1289,10 +1154,9 @@ def summarize(material_id):
     
     summary_text = ""
     error_message = None
-    response = None # Initialize response for the except block
+    response = None
 
     try:
-        # Step 1: Extract text from the PDF file
         doc = fitz.open(material['filepath'])
         full_text = "".join(page.get_text() for page in doc)
         doc.close()
@@ -1300,10 +1164,7 @@ def summarize(material_id):
         if not full_text.strip():
             summary_text = "This PDF appears to be empty or contains no readable text."
         else:
-            # Step 2: Call the new, long-context summarizer
             payload = {"text": full_text}
-            
-            # *** CRITICAL FIX: The request line was missing here! ***
             response = requests.post(
                 f"{app.config['AI_SERVICE_URL']}/summarize-long", 
                 json=payload, 
@@ -1318,7 +1179,6 @@ def summarize(material_id):
                 error_message = summary_data.get('error', 'An unknown error occurred at the AI service.')
 
     except requests.exceptions.RequestException as e:
-        # Check for connection error specifically to provide better feedback
         if isinstance(e, requests.exceptions.ConnectionError):
             error_message = "Could not connect to the AI summarization service. **It is offline.** Please ensure ai_app.py is running on port 5001."
         else:
@@ -1451,9 +1311,10 @@ def api_register():
         return redirect(url_for('login'))
     otp = str(random.randint(100000, 999999))
     otp_expiry = datetime.utcnow() + timedelta(minutes=10)
-    if not send_otp_email(email, otp):
-        flash("Could not send verification email.", "danger")
-        return redirect(url_for('register'))
+    
+    # Use async email sending to prevent timeouts
+    send_email_async(email, otp)
+    
     mongo.db.temp_users.update_one(
         {"email": email},
         {"$set": {"username": username, "role": role, "otp": otp, "otp_expiry": otp_expiry}},
@@ -1474,18 +1335,14 @@ def api_resend_otp():
     user = mongo.db.users.find_one({"email": email})
     if user:
         mongo.db.users.update_one({"email": email}, {"$set": {"otp": otp, "otp_expiry": otp_expiry}})
-        if send_otp_email(email, otp):
-            return jsonify({"success": True, "message": "New login code sent."})
-        else:
-            return jsonify({"success": False, "message": "Failed to send email."}), 500
+        send_email_async(email, otp)
+        return jsonify({"success": True, "message": "New login code sent."})
 
     temp_user = mongo.db.temp_users.find_one({"email": email})
     if temp_user:
         mongo.db.temp_users.update_one({"email": email}, {"$set": {"otp": otp, "otp_expiry": otp_expiry}})
-        if send_otp_email(email, otp):
-            return jsonify({"success": True, "message": "New verification code sent."})
-        else:
-            return jsonify({"success": False, "message": "Failed to send email."}), 500
+        send_email_async(email, otp)
+        return jsonify({"success": True, "message": "New verification code sent."})
     
     return jsonify({"success": False, "message": "No account found for this email."}), 404
 
@@ -1636,9 +1493,7 @@ def api_login():
     else: # OTP Login
         otp = str(random.randint(100000, 999999))
         otp_expiry = datetime.utcnow() + timedelta(minutes=10)
-        if not send_otp_email(email, otp):
-            flash("Could not send login code.", "danger")
-            return redirect(url_for('login'))
+        send_email_async(email, otp)
         mongo.db.users.update_one({"email": email}, {"$set": {"otp": otp, "otp_expiry": otp_expiry}})
         flash(f"A login code has been sent to {email}.", "success")
         return redirect(url_for('verify_page', email=email))
@@ -1648,6 +1503,7 @@ def logout():
     session.clear()
     flash("You have been logged out.", "info")
     return redirect(url_for('index'))
+
 @app.route('/api/gemini-chat', methods=['POST'])
 @login_required
 def gemini_chat():
@@ -1674,11 +1530,6 @@ def gemini_chat():
         import traceback
         traceback.print_exc()
         return jsonify({"error": "An error occurred while communicating with the AI."}), 500
-# app.py (New API Endpoint)
-
-# app.py (Insert this route)
-
-# app.py (CORRECTED /api/generate-ai-quiz route)
 
 @app.route('/api/generate-ai-quiz', methods=['POST'])
 @login_required
@@ -1689,13 +1540,11 @@ def api_generate_ai_quiz():
     if not material_id:
         return jsonify({"error": "Missing material ID."}), 400
 
-    # Initialize response here to make it accessible in the except block
     response = None 
     
     try:
         material = mongo.db.materials.find_one_or_404({"_id": ObjectId(material_id)})
         
-        # 1. Extract text from the PDF file
         doc = fitz.open(material['filepath'])
         full_text = "".join(page.get_text() for page in doc)
         doc.close()
@@ -1703,10 +1552,8 @@ def api_generate_ai_quiz():
         if not full_text.strip():
             return jsonify({"error": "The material contains no readable text for quiz generation."}), 400
 
-        # 2. Call the AI service's /generate-quiz endpoint
         payload = {"text": full_text, "num_questions": 5} 
         
-        # *** FIX: Ensure the request and assignment happen in the try block ***
         response = requests.post(f"{app.config['AI_SERVICE_URL']}/generate-quiz", json=payload, timeout=90)
         response.raise_for_status() 
         
@@ -1716,7 +1563,6 @@ def api_generate_ai_quiz():
 
     except requests.exceptions.RequestException as e:
         print(f"Error contacting AI service for quiz: {e}")
-        # Only log the internal error if response object exists and status is 500
         if response is not None and response.status_code == 500:
              print(f"AI Service Error: {response.text}")
         return jsonify({"error": "Could not connect to the AI quiz generation service. Check if it's running on port 5001."}), 500
@@ -1769,8 +1615,6 @@ def log_material_view():
     )
 
     return jsonify({"success": True})
-
-
 
 @app.route('/api/messages/<conversation_id>/send', methods=['POST'])
 @login_required
