@@ -75,15 +75,59 @@ with app.app_context():
 # --- Improved Email Functions with Resend API ---
 import requests
 
+# --- Improved Email Functions with Brevo SMTP ---
 def send_otp_email(recipient_email, otp):
-    RESEND_API_KEY = "re_1234567890"  # You'll get this from Resend
-    SENDER_EMAIL = "IntelliLearn <onboarding@resend.dev>"
+    # Brevo SMTP configuration (FREE - 300 emails/day)
+    SMTP_SERVER = "smtp-relay.brevo.com"
+    SMTP_PORT = 587
+    SMTP_USERNAME = "xsmtpsib-f4ffc6f06b4c94f28dcf732aa9262122e5b0153f0917722828b5a92c9046c3e2@brevo.com"
+    SMTP_PASSWORD = "E6K3PgsBEZBJKZjf"
+    SENDER_EMAIL = "swapnilrao729@gmail.com"
     
-    # For now, use fallback until we set up Resend
-    print(f"📧 OTP for {recipient_email}: {otp}")
-    print("💡 To enable real emails, sign up at resend.com and add RESEND_API_KEY")
-    return True
+    message = f"""Subject: Your IntelliLearn Verification Code
 
+Your One-Time Password (OTP) is: {otp}
+
+This code will expire in 10 minutes.
+
+If you didn't request this code, please ignore this email.
+
+Best regards,
+IntelliLearn Team
+"""
+    
+    # Try multiple times with increasing timeouts
+    timeouts = [10, 15, 20]  # seconds
+    
+    for attempt, timeout_val in enumerate(timeouts, 1):
+        try:
+            print(f"🔄 Attempt {attempt}: Sending OTP email to {recipient_email} (timeout: {timeout_val}s)")
+            
+            # Connect to Brevo SMTP with increased timeout
+            smtp = smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=timeout_val)
+            smtp.ehlo()
+            smtp.starttls()
+            smtp.ehlo()
+            smtp.login(SMTP_USERNAME, SMTP_PASSWORD)
+            smtp.sendmail(SENDER_EMAIL, recipient_email, message)
+            smtp.quit()
+            
+            print(f"✅ Email sent successfully to {recipient_email}!")
+            return True
+            
+        except socket.timeout:
+            print(f"⏰ Timeout on attempt {attempt}, retrying...")
+            continue
+        except Exception as e:
+            print(f"❌ Email failed on attempt {attempt}: {e}")
+            if attempt == len(timeouts):  # Last attempt failed
+                # Fallback: log OTP to console
+                print(f"📧 FALLBACK OTP for {recipient_email}: {otp}")
+                return True  # Return True to allow registration
+    
+    # If all attempts failed
+    print(f"📧 FALLBACK OTP for {recipient_email}: {otp}")
+    return True
 def send_email_async(recipient_email, otp):
     """Send email in a separate thread"""
     def send_wrapper():
@@ -1630,6 +1674,7 @@ def send_api_message(conversation_id):
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port, debug=False)
+
 
 
 
