@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Create Quiz{% endblock %}
+{% block content %}
+<section class="page-section">
+    <div class="container">
+        <div class="page-header">
+            <h1>Create Quiz for "{{ material.title }}"</h1>
+            <a href="{{ url_for('course_detail', course_id=material.course_id) }}" class="btn btn-secondary">Cancel</a>
+        </div>
+        <form action="{{ url_for('create_quiz', material_id=material._id) }}" method="POST">
+            <div class="form-container-card">
+                <div class="form-group">
+                    <label for="quiz_title">Quiz Title</label>
+                    <input type="text" id="quiz_title" name="quiz_title" value="{{ material.title }} Quiz" required>
+                </div>
+            </div>
+
+            <div id="questions-container">
+                </div>
+
+            <div class="quiz-actions">
+                <button type="button" id="add-question-btn" class="btn btn-secondary">
+                    <i class="fas fa-plus"></i> Add Question
+                </button>
+                <button type="submit" class="btn btn-primary">Save Quiz</button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const questionsContainer = document.getElementById('questions-container');
+    const addQuestionBtn = document.getElementById('add-question-btn');
+    let questionIndex = 0;
+
+    function addQuestion() {
+        const questionId = questionIndex++;
+        const questionHtml = `
+            <div class="form-container-card question-card" id="question-card-${questionId}">
+                <div class="question-header">
+                    <h4>Question ${questionId + 1}</h4>
+                    <button type="button" class="btn btn-danger btn-sm remove-question-btn" data-id="${questionId}">Remove</button>
+                </div>
+                <div class="form-group">
+                    <label for="question_text_${questionId}">Question Text</label>
+                    <input type="text" id="question_text_${questionId}" name="question_text_${questionId}" required>
+                </div>
+                <div class="form-group">
+                    <label>Options (Select the correct answer)</label>
+                    <div class="options-container">
+                        ${[0, 1, 2, 3].map(i => `
+                        <div class="input-group mb-2">
+                            <div class="input-group-text">
+                                <input type="radio" name="correct_answer_${questionId}" value="${i}" required>
+                            </div>
+                            <input type="text" class="form-control" name="option_${questionId}" placeholder="Option ${i + 1}" required>
+                        </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+        questionsContainer.insertAdjacentHTML('beforeend', questionHtml);
+    }
+
+    // Add the first question automatically
+    addQuestion();
+
+    addQuestionBtn.addEventListener('click', addQuestion);
+
+    // Event delegation for remove buttons
+    questionsContainer.addEventListener('click', function(e) {
+        if (e.target && e.target.classList.contains('remove-question-btn')) {
+            const cardId = `question-card-${e.target.dataset.id}`;
+            document.getElementById(cardId).remove();
+        }
+    });
+});
+</script>
+{% endblock %}

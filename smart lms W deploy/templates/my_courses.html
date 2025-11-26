@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}My Courses{% endblock %}
+
+{% block content %}
+<section class="page-section">
+    <div class="container">
+        <div class="page-header">
+            <h1>My Courses</h1>
+            {% if session.role == 'teacher' or session.role == 'admin' %}
+            <div class="header-actions">
+                <a href="{{ url_for('manage_requests') }}" class="btn btn-secondary">
+                    <i class="fas fa-user-check"></i> Manage Requests
+                </a>
+                <a href="{{ url_for('create_course') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Create New Course
+                </a>
+            </div>
+            {% else %}
+            <a href="{{ url_for('browse_courses') }}" class="btn btn-primary">
+                <i class="fas fa-search"></i> Browse & Enroll
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="courses-grid">
+            {% for course in courses %}
+            <div class="course-card">
+                <div class="course-card-header">
+                    <i class="fas {{ course.icon }} course-header-icon"></i>
+                    <span class="course-tag">{{ course.category }}</span>
+                </div>
+                <div class="course-card-body">
+                    <h3>{{ course.title }}</h3>
+                    <p>{{ course.description }}</p>
+                </div>
+                <div class="course-card-footer">
+                    <a href="{{ url_for('course_detail', course_id=course._id) }}" class="btn btn-secondary btn-sm">View Course</a>
+                </div>
+            </div>
+            {% endfor %}
+
+            {% if not courses %}
+            <div class="empty-state">
+                <p>You have not created or enrolled in any courses yet.</p>
+                {% if session.role == 'student' %}
+                <a href="{{ url_for('browse_courses') }}" class="btn btn-primary" style="margin-top: 1rem;">Enroll in your first course!</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

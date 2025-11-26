@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}{{ course.title }}{% endblock %}
+{% block content %}
+<section class="page-section">
+    <div class="container">
+        <div class="course-detail-header">
+            <div>
+                <span class="course-tag">{{ course.category }}</span>
+                <h1>{{ course.title }}</h1>
+                <p class="course-description">{{ course.description }}</p>
+            </div>
+        </div>
+
+        <div class="course-content-grid">
+            <div class="materials-section">
+                <div class="tabs">
+                    <button class="tab-link active" onclick="openTab(event, 'materials')"><i class="fas fa-file-alt"></i> Course Materials</button>
+                    <button class="tab-link" onclick="openTab(event, 'assignments')"><i class="fas fa-tasks"></i> Assignments</button>
+                </div>
+
+                <div id="materials" class="tab-content">
+                    <div class="materials-list">
+                        {% for material in materials %}
+                        <div class="material-item">
+                            <div class="material-icon"><i class="fas fa-file-pdf"></i></div>
+                            <div class="material-info">
+                                <h4><a href="{{ url_for('view_pdf', filename=material.filename) }}" target="_blank" class="material-title-link material-view-link" data-material-id="{{ material._id }}">{{ material.title }}</a></h4>
+                                <span>Uploaded on: {{ material.uploaded_at.strftime('%d %b %Y') }}</span>
+                            </div>
+
+                         <div class="material-actions">
+    <a href="{{ url_for('summarize', material_id=material._id) }}" class="btn btn-secondary btn-sm">Summarize</a>
+
+    {# --- MANUAL QUIZ BUTTON LOGIC (VARIES BY ROLE) --- #}
+    {% if session.role in ['teacher', 'admin'] %}
+        {% if material.quiz %}
+            <a href="{{ url_for('take_quiz', quiz_id=material.quiz._id) }}" class="btn btn-primary btn-sm">View Manual Quiz</a>
+        {% else %}
+            <a href="{{ url_for('create_quiz', material_id=material._id) }}" class="btn btn-primary btn-sm">Create Manual Quiz</a>
+        {% endif %}
+    {% elif session.role == 'student' %}
+        {% if material.quiz %}
+            <a href="{{ url_for('take_quiz', quiz_id=material.quiz._id) }}" class="btn btn-primary btn-sm">Take Manual Quiz</a>
+        {% endif %}
+    {% endif %}
+
+    {# --- AI QUIZ BUTTON (ALWAYS VISIBLE TO LOGGED-IN USERS) --- #}
+    <a href="{{ url_for('quiz', material_id=material._id) }}" class="btn btn-secondary btn-sm">AI Quiz (Preview)</a>
+
+    {# --- DELETE BUTTON (ONLY FOR TEACHER/ADMIN) --- #}
+    {% if session.role in ['admin', 'teacher'] %}
+    <form action="{{ url_for('delete_material', material_id=material._id) }}" method="POST" class="delete-material-form">
+        <button type="submit" class="btn btn-danger btn-sm" title="Delete Material"><i class="fas fa-trash-alt"></i></button>
+    </form>
+    {% endif %}
+</div>
+                        </div>
+                        {% endfor %}
+                        {% if not materials %}
+                        <div class="empty-state"><i class="fas fa-file-excel"></i><p>No materials have been uploaded yet.</p></div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div id="assignments" class="tab-content">
+                    <div class="assignments-list">
+                        {% for assignment in assignments %}
+                        <div class="assignment-item">
+                            <div class="assignment-icon"><i class="fas fa-clipboard-list"></i></div>
+                            <div class="assignment-info">
+                                <h4>{{ assignment.title }}</h4>
+                                <p>{{ assignment.description }}</p>
+                                <div class="assignment-footer">
+                                    {% if assignment.filename %}
+                                    <a href="{{ url_for('view_assignment_file', filename=assignment.filename) }}" class="btn btn-secondary btn-sm" target="_blank"><i class="fas fa-paperclip"></i> View Attachment</a>
+                                    {% endif %}
+                                    <span class="due-date">Due: {{ assignment.due_date.strftime('%d %b %Y') }}</span>
+                                </div>
+                                
+                                {% include 'partials/_submission_area.html' %}
+                                
+                            </div>
+                            {% if session.role == 'admin' %}
+                            <div class="material-actions">
+                                <form action="{{ url_for('delete_assignment', assignment_id=assignment._id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this assignment?');">
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Delete Assignment"><i class="fas fa-trash-alt"></i></button>
+                                </form>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        {% if not assignments %}
+                        <div class="empty-state"><i class="fas fa-tasks"></i><p>No assignments have been created yet.</p></div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-column">
+                {% if session.role in ['admin', 'teacher'] %}
+                <div class="teacher-actions-section">
+                    <h2>Teacher Panel</h2>
+                    <div class="form-container-card">
+                        <h4>Upload New Material</h4>
+                        <form id="upload-material-form" action="{{ url_for('upload_material', course_id=course._id) }}" method="POST" enctype="multipart/form-data">
+                            <div class="form-group"><input type="text" name="material_title" placeholder="Material Title" required></div>
+                            <div class="form-group"><input type="file" name="material_file" accept=".pdf" required></div>
+                            <button type="submit" class="btn btn-primary btn-block">Upload</button>
+                        </form>
+                        <hr class="form-divider">
+                        <a href="{{ url_for('create_assignment', course_id=course._id) }}" class="btn btn-primary btn-block">Create New Assignment</a>
+                        <a href="{{ url_for('enrolled_students', course_id=course._id) }}" class="btn btn-secondary btn-block" style="margin-top: 0.5rem;">View Enrolled Students</a>
+                    </div>
+                </div>
+                {% endif %}
+                <div class="course-chatbot-container">
+                    <h3><i class="fas fa-brain"></i> Ask Course AI</h3>
+                    <div class="chatbot-body" id="course-chat-body">
+                        <div class="chat-message bot-message"><p>Ask me anything about the materials in this course!</p></div>
+                    </div>
+                    <div class="chatbot-footer">
+                        <input type="text" id="course-chat-input" placeholder="e.g., What is a kernel?" data-course-id="{{ course._id }}">
+                        <button id="course-chat-send" class="btn btn-primary"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

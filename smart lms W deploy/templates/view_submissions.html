@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}View Submissions{% endblock %}
+{% block content %}
+<section class="page-section">
+    <div class="container">
+        <div class="page-header">
+            <h1>Submissions for "{{ assignment.title }}"</h1>
+            <a href="{{ url_for('course_detail', course_id=assignment.course_id) }}" class="btn btn-secondary">Back to Course</a>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>File</th>
+                        <th>Submitted On</th>
+                        <th>Grade</th>
+                        <th>Feedback</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in submissions %}
+                    <tr>
+                        <td>{{ sub.student_name }}</td>
+                        <td>
+                            <a href="{{ url_for('view_submission_file', filename=sub.filename) }}" target="_blank">
+                                {{ sub.filename }}
+                            </a>
+                        </td>
+                        <td>{{ sub.submitted_at.strftime('%d %b %Y, %I:%M %p') }}</td>
+                        <form action="{{ url_for('grade_submission', submission_id=sub._id) }}" method="POST">
+                            <td>
+                                <input type="text" name="grade" value="{{ sub.grade or '' }}" placeholder="e.g., A+" class="grade-input">
+                            </td>
+                            <td>
+                                <input type="text" name="feedback" value="{{ sub.feedback or '' }}" placeholder="Add feedback..." class="feedback-input">
+                            </td>
+                            <td>
+                                <button type="submit" class="btn btn-primary btn-sm">Save Grade</button>
+                            </td>
+                        </form>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if not submissions %}
+        <div class="empty-state" style="margin-top: 2rem;">
+            <p>No students have submitted a solution for this assignment yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

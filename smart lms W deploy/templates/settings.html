@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Account Settings{% endblock %}
+{% block content %}
+<section class="page-section">
+    <div class="container">
+        <div class="page-header">
+            <h1>Personalized Learning Profile</h1>
+        </div>
+
+        <div class="settings-grid">
+            <!-- Profile Information Card -->
+            <div class="form-container-card">
+                <h3><i class="fas fa-user-circle"></i> Profile Information</h3>
+                <form action="{{ url_for('settings') }}" method="POST" enctype="multipart/form-data">
+                    <!-- Profile Picture Uploader -->
+                    <div class="form-group profile-picture-uploader">
+                        <label for="profile_picture">Profile Picture</label>
+                        <img src="{{ session.user_avatar or url_for('static', filename='assets/default_avatar.png') }}" alt="Current profile picture" class="profile-avatar-preview">
+                        <input type="file" id="profile_picture" name="profile_picture" accept="image/png, image/jpeg">
+                    </div>
+
+                    <!-- Username Update -->
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" value="{{ session.username }}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" value="{{ session.user_email }}" disabled>
+                        <small class="text-muted">Email address cannot be changed.</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Update Profile</button>
+                </form>
+            </div>
+
+            <!-- Change Password Card -->
+            <div class="form-container-card">
+                <h3><i class="fas fa-key"></i> Change Password</h3>
+                <form action="{{ url_for('change_password') }}" method="POST">
+                    <div class="form-group">
+                        <label for="current_password">Current Password</label>
+                        <input type="password" id="current_password" name="current_password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new_password_change">New Password</label>
+                        <input type="password" id="new_password_change" name="new_password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Change Password</button>
+                </form>
+            </div>
+
+            <!-- AI Personalization Card -->
+            <div class="form-container-card">
+                <h3><i class="fas fa-robot"></i> AI Personalization</h3>
+                <p class="text-muted">Customize how IntelliLearn's AI assists you. (Feature coming soon)</p>
+                <form>
+                    <div class="form-group">
+                        <label for="summary-style">Preferred Summary Style</label>
+                        <select id="summary-style" name="summary-style" class="role-select" disabled>
+                            <option>Standard (Recommended)</option>
+                        </select>
+                    </div>
+                     <div class="form-group">
+                        <label for="quiz-difficulty">Preferred Quiz Difficulty</label>
+                        <select id="quiz-difficulty" name="quiz-difficulty" class="role-select" disabled>
+                            <option>Standard</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

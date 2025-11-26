@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}My Messages{% endblock %}
+
+{% block content %}
+<section class="page-section">
+    <div class="container">
+        <div class="messaging-container" id="messaging-container" data-user-id="{{ session.user_id }}" style="height: 75vh; display: flex;">
+            
+            <div class="conversations-panel" style="width: 300px; flex-shrink: 0; border-right: 1px solid #ddd;">
+                <div class="panel-header">
+                    <h3>Conversations</h3>
+                    <a href="{{ url_for('new_message') }}" class="btn btn-primary btn-sm" title="New Message">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                </div>
+                <div class="conversations-list" style="height: calc(100% - 60px); overflow-y: auto;">
+                    {% for convo in conversations %}
+                    <a href="{{ url_for('messages', conversation_id=convo._id) }}" class="conversation-item {% if active_conversation and active_conversation._id == convo._id %}active{% endif %}">
+                        <div class="convo-avatar">
+                            {% if convo.other_user.avatar %}
+                                <img src="{{ convo.other_user.avatar }}" alt="Avatar" class="convo-avatar-img">
+                            {% else %}
+                                <div class="convo-avatar-initial">{{ convo.other_user.username[0]|upper }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="convo-info">
+                            <span class="convo-username">{{ convo.other_user.username }}</span>
+                            {% if convo.last_message %}
+                            <p class="convo-preview">
+                                {% if convo.last_message.sender_id|string == session.user_id %}You: {% endif %}
+                                {{ convo.last_message.body|truncate(25) }}
+                            </p>
+                            {% endif %}
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="chat-panel" style="flex-grow: 1; display: flex; flex-direction: column;">
+                <div class="panel-header" style="flex-shrink: 0;">
+                    <h3>
+                        {% if active_conversation and active_conversation.other_user %}
+                            Chat with {{ active_conversation.other_user.username }}
+                        {% else %}
+                            Messages
+                        {% endif %}
+                    </h3>
+                </div>
+
+                <div class="chat-body" id="chat-body" style="flex-grow: 1; overflow-y: auto; padding: 1rem;">
+                    {% if active_conversation and active_conversation.other_user %}
+                        {% for message in messages %}
+                        <div class="chat-message-wrapper">
+                            <div class="chat-message {% if message.sender_id|string == session.user_id %}sent{% else %}received{% endif %}">
+                                <p>{{ message.body }}</p>
+                                <span class="message-timestamp">{{ message.formatted_timestamp }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="chat-placeholder">
+                            <i class="fas fa-comments fa-3x"></i>
+                            <p>Select a conversation to start a new one.</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="chat-footer p-3 border-top" style="flex-shrink: 0;">
+                    <div class="input-group">
+                        <textarea id="message-input" class="form-control" 
+                                  placeholder="{% if active_conversation and active_conversation.other_user %}Type your message...{% else %}Select a conversation to reply{% endif %}" 
+                                  style="min-height: 75px; resize: none;"
+                                  {% if not active_conversation or not active_conversation.other_user %}disabled{% endif %}></textarea>
+                        
+                        <button id="send-message-btn" class="btn btn-primary btn-lg" 
+                                data-conversation-id="{{ active_conversation._id if active_conversation else '' }}"
+                                {% if not active_conversation or not active_conversation.other_user %}disabled{% endif %}>
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sendButton = document.getElementById('send-message-btn');
+    const messageInput = document.getElementById('message-input');
+    const chatBody = document.getElementById('chat-body');
+
+    function scrollToBottom() {
+        if (chatBody) {
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+    }
+
+    scrollToBottom();
+
+    if (sendButton) {
+        sendButton.addEventListener('click', function() {
+            const conversationId = this.getAttribute('data-conversation-id');
+            const messageBody = messageInput.value.trim();
+
+            if (!messageBody || !conversationId) {
+                return;
+            }
+
+            fetch(`/api/messages/${conversationId}/send`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ body: messageBody }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const messageWrapper = document.createElement('div');
+                    messageWrapper.className = 'chat-message-wrapper';
+                    
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'chat-message sent';
+                    
+                    const p = document.createElement('p');
+                    p.textContent = data.message.body;
+                    
+                    const span = document.createElement('span');
+                    span.className = 'message-timestamp';
+                    span.textContent = data.message.formatted_timestamp;
+
+                    messageDiv.appendChild(p);
+                    messageDiv.appendChild(span);
+                    messageWrapper.appendChild(messageDiv);
+                    
+                    chatBody.appendChild(messageWrapper);
+                    scrollToBottom();
+
+                    messageInput.value = '';
+                    messageInput.style.height = 'auto';
+                    // Reset to a comfortable base height
+                    messageInput.style.height = '75px';
+                } else {
+                    alert('Error: Message could not be sent.');
+                }
+            })
+            .catch(error => {
+                console.error('Error sending message:', error);
+                alert('A network error occurred.');
+            });
+        });
+    }
+
+    if (messageInput) {
+        function autoGrow() {
+            // Set a max height to prevent it from growing forever
+            const maxHeight = 200; 
+            messageInput.style.height = 'auto';
+            const newHeight = Math.min(messageInput.scrollHeight, maxHeight);
+            messageInput.style.height = newHeight + 'px';
+        }
+        messageInput.addEventListener('input', autoGrow);
+    }
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Create New Assignment{% endblock %}
+{% block content %}
+<section class="page-section">
+    <div class="container">
+        <div class="page-header">
+            <h1>Create New Assignment for "{{ course.title }}"</h1>
+            <a href="{{ url_for('course_detail', course_id=course._id) }}" class="btn btn-secondary">Cancel</a>
+        </div>
+
+        <div class="form-container-card">
+            <form action="{{ url_for('create_assignment', course_id=course._id) }}" method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="assignment_title">Assignment Title</label>
+                    <input type="text" id="assignment_title" name="assignment_title" placeholder="e.g., Chapter 5 Problem Set" required>
+                </div>
+                <div class="form-group">
+                    <label for="assignment_description">Description & Instructions</label>
+                    <textarea id="assignment_description" name="assignment_description" rows="6" placeholder="Provide detailed instructions for the assignment..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="assignment_file">Attach File (Optional)</label>
+                    <input type="file" id="assignment_file" name="assignment_file" accept=".pdf,.doc,.docx,.txt">
+                </div>
+                <div class="form-group">
+                    <label for="due_date">Due Date</label>
+                    <input type="date" id="due_date" name="due_date" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Create Assignment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

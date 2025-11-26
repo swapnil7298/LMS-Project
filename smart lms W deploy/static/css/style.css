@@ -1,0 +1,1590 @@
+/* static/css/style.css */
+
+/* --- 1. Variables and Base Setup --- */
+:root {
+    /* Color Palette */
+    --primary-color: #4f46e5; /* A modern indigo */
+    --primary-color-dark: #4338ca;
+    --secondary-color: #10b981; /* A vibrant green */
+    --secondary-color-dark: #059669;
+
+    /* Light Mode Variables */
+    --bg-color: #f8fafc; /* Very light gray */
+    --surface-color: #ffffff; /* White for cards */
+    --text-color: #0f172a; /* Almost black */
+    --muted-text-color: #64748b;
+    --border-color: #e2e8f0;
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+
+    /* Typography */
+    --font-family: 'Poppins', sans-serif;
+    --border-radius: 0.5rem; /* 8px */
+    --transition-speed: 0.3s;
+}
+
+/* Dark Mode Overrides */
+body.dark-mode {
+    --bg-color: #0f172a; /* Dark slate */
+    --surface-color: #1e293b; /* Darker slate */
+    --text-color: #f8fafc; /* Almost white */
+    --muted-text-color: #94a3b8;
+    --border-color: #334155;
+}
+
+/* Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+/* --- 2. Header and Navigation --- */
+header {
+    background-color: var(--surface-color);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+    text-decoration: none;
+}
+
+.logo-img {
+    height: 60px;
+    width: 60px;
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    gap: 2rem;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: var(--muted-text-color);
+    font-weight: 500;
+    transition: color var(--transition-speed) ease;
+}
+
+.nav-links a:hover {
+    color: var(--primary-color);
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* --- 3. Buttons and Theme Toggle --- */
+.btn {
+    padding: 0.6rem 1.2rem;
+    border-radius: var(--border-radius);
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all var(--transition-speed) ease;
+    display: inline-block;
+    font-size: 0.9rem;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+.btn-primary:hover {
+    background-color: var(--primary-color-dark);
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background-color: var(--surface-color);
+    color: var(--primary-color);
+    border: 1px solid var(--border-color);
+}
+.btn-secondary:hover {
+    background-color: var(--bg-color);
+    border-color: var(--primary-color);
+}
+
+.btn-lg {
+    padding: 0.8rem 1.8rem;
+    font-size: 1rem;
+}
+
+.btn-block {
+    width: 100%;
+    text-align: center;
+    padding: 0.8rem;
+}
+
+.theme-toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: var(--muted-text-color);
+}
+.theme-toggle-btn .fa-sun { display: none; }
+.theme-toggle-btn .fa-moon { display: block; }
+
+body.dark-mode .theme-toggle-btn .fa-sun { display: block; }
+body.dark-mode .theme-toggle-btn .fa-moon { display: none; }
+
+
+/* --- 4. Home Page: Hero, Features, CTA --- */
+.hero {
+    text-align: center;
+    padding: 6rem 0;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+}
+
+.hero-subtitle {
+    font-size: 1.2rem;
+    color: var(--muted-text-color);
+    max-width: 700px;
+    margin: 0 auto 2rem;
+}
+
+.hero-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.features {
+    padding: 4rem 0;
+    background-color: var(--surface-color);
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+.section-header h2 { font-size: 2.5rem; }
+.section-header p { color: var(--muted-text-color); font-size: 1.1rem; }
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.feature-card {
+    background-color: var(--bg-color);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.feature-icon {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+.feature-card h3 { margin-bottom: 0.5rem; }
+.feature-card p { color: var(--muted-text-color); }
+
+.cta {
+    text-align: center;
+    padding: 5rem 0;
+}
+.cta h2 { font-size: 2rem; margin-bottom: 1rem; }
+
+/* --- 5. Authentication Pages (Login/Register) --- */
+.auth-section {
+    padding: 4rem 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+}
+
+.auth-card {
+    background-color: var(--surface-color);
+    padding: 2.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: 450px;
+    border: 1px solid var(--border-color);
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+.auth-header h2 { font-size: 1.8rem; }
+.auth-header p { color: var(--muted-text-color); }
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+.form-group label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+.form-group input {
+    width: 100%;
+    padding: 0.7rem 1rem;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: inherit;
+    font-size: 1rem;
+}
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 20%, transparent);
+}
+
+.password-wrapper {
+    position: relative;
+}
+.password-toggle-icon {
+    position: absolute;
+    top: 50%;
+    right: 1rem;
+    transform: translateY(-50%);
+    color: var(--muted-text-color);
+    cursor: pointer;
+}
+
+.form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+}
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.forgot-password-link {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+}
+.auth-footer a {
+    color: var(--primary-color);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.role-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+.role-option input[type="radio"] { display: none; }
+.role-option label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all var(--transition-speed) ease;
+}
+.role-option label i { font-size: 2rem; margin-bottom: 0.5rem; }
+.role-option input:checked + label {
+    border-color: var(--primary-color);
+    background-color: color-mix(in srgb, var(--primary-color) 10%, transparent);
+    color: var(--primary-color);
+}
+
+/* --- 6. Footer --- */
+.footer {
+    background-color: var(--surface-color);
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+    padding: 2rem 0;
+    color: var(--muted-text-color);
+    margin-top: 4rem;
+}
+
+/* --- 7. Responsive Design --- */
+@media (max-width: 768px) {
+    .hero-title { font-size: 2.5rem; }
+    nav { flex-direction: column; gap: 1rem; }
+    .nav-links { order: 3; }
+    .nav-actions { order: 2; }
+}
+/* --- 8. Dashboard & Internal Pages --- */
+
+.dashboard-section, .page-section {
+    padding: 4rem 0;
+}
+
+.dashboard-header, .page-header {
+    margin-bottom: 3rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dashboard-header h1, .page-header h1 {
+    font-size: 2.2rem;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 4rem;
+}
+
+.dashboard-card {
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    text-decoration: none;
+    color: var(--text-color);
+    transition: all var(--transition-speed) ease;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow);
+    border-color: var(--primary-color);
+}
+
+.card-icon {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+}
+
+.card-content h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.25rem;
+}
+
+.card-content p {
+    color: var(--muted-text-color);
+    font-size: 0.9rem;
+}
+
+/* Gemini Chat Bar */
+.gemini-chat-bar {
+    display: flex;
+    gap: 0.5rem;
+    background-color: var(--surface-color);
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+
+#gemini-prompt {
+    flex-grow: 1;
+    border: none;
+    background: none;
+    padding: 0.5rem;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+#gemini-prompt:focus {
+    outline: none;
+}
+
+/* Courses Grid */
+.courses-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+.course-card {
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.course-card-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.course-tag {
+    background-color: color-mix(in srgb, var(--primary-color) 15%, transparent);
+    color: var(--primary-color);
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.course-card-body {
+    padding: 1.5rem;
+    flex-grow: 1;
+}
+
+.course-card-body h3 {
+    margin-bottom: 0.5rem;
+}
+
+.course-card-body p {
+    color: var(--muted-text-color);
+    font-size: 0.9rem;
+}
+
+.course-card-footer {
+    padding: 1rem 1.5rem;
+    background-color: var(--bg-color);
+    text-align: right;
+}
+
+.btn-sm {
+    padding: 0.4rem 1rem;
+    font-size: 0.8rem;
+}
+/* --- 9. Create Course Page & Forms --- */
+
+.form-container-card {
+    background-color: var(--surface-color);
+    padding: 2.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: 700px; /* Wider for course forms */
+    margin: 0 auto; /* Center the form card */
+    border: 1px solid var(--border-color);
+}
+
+.form-group textarea {
+    width: 100%;
+    padding: 0.7rem 1rem;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: inherit;
+    font-size: 1rem;
+    resize: vertical; /* Allow vertical resizing */
+}
+
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 20%, transparent);
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+    gap: 1rem;
+    margin-top: 2rem;
+}
+/* --- 10. Course Detail Page --- */
+
+.course-detail-header {
+    text-align: center;
+    padding-bottom: 2rem;
+    margin-bottom: 3rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.course-detail-header h1 {
+    font-size: 2.8rem;
+    margin: 0.5rem 0;
+}
+
+.course-detail-header .course-tag {
+    margin-bottom: 1rem;
+    display: inline-block;
+}
+
+.course-description {
+    font-size: 1.1rem;
+    color: var(--muted-text-color);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.course-content-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr; /* 2/3 for materials, 1/3 for actions */
+    gap: 3rem;
+}
+
+.materials-section h2, .teacher-actions-section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.materials-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.material-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+}
+
+.material-icon {
+    font-size: 2rem;
+    color: var(--primary-color);
+}
+
+.material-info {
+    flex-grow: 1;
+}
+
+.material-info h4 {
+    font-weight: 600;
+}
+
+.material-info span {
+    font-size: 0.8rem;
+    color: var(--muted-text-color);
+}
+
+.material-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.teacher-actions-section .form-container-card {
+    padding: 1.5rem;
+    max-width: 100%;
+}
+
+.teacher-actions-section .form-container-card h4 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    font-size: 1.2rem;
+}
+
+/* Responsive adjustments for course detail page */
+@media (max-width: 992px) {
+    .course-content-grid {
+        grid-template-columns: 1fr; /* Stack columns on smaller screens */
+    }
+}
+/* --- 11. Gemini Chatbot --- */
+
+.chatbot-toggle-btn {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 1.8rem;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    z-index: 1001;
+    transition: transform 0.3s ease;
+}
+
+.chatbot-toggle-btn:hover {
+    transform: scale(1.1);
+}
+
+.chatbot-window {
+    position: fixed;
+    bottom: 6rem;
+    right: 2rem;
+    width: 370px;
+    max-width: 90vw;
+    height: 500px;
+    max-height: 70vh;
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    transform: scale(0);
+    transform-origin: bottom right;
+    transition: transform 0.3s ease;
+}
+
+.chatbot-window.open {
+    transform: scale(1);
+}
+
+.chatbot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background-color: var(--bg-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.chatbot-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.close-chatbot-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--muted-text-color);
+}
+
+.chatbot-body {
+    flex-grow: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.chat-message {
+    max-width: 80%;
+    padding: 0.75rem;
+    border-radius: var(--border-radius);
+    line-height: 1.4;
+}
+
+.chat-message p { margin: 0; }
+
+.user-message {
+    background-color: var(--primary-color);
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 0;
+}
+
+.bot-message {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    align-self: flex-start;
+    border-bottom-left-radius: 0;
+}
+
+.bot-message.loading p::after {
+    content: '...';
+    display: inline-block;
+    animation: dots 1s steps(3, end) infinite;
+}
+
+@keyframes dots {
+  0%, 20% { color: rgba(0,0,0,0); text-shadow: .25em 0 0 rgba(0,0,0,0), .5em 0 0 rgba(0,0,0,0); }
+  40% { color: var(--text-color); text-shadow: .25em 0 0 rgba(0,0,0,0), .5em 0 0 rgba(0,0,0,0); }
+  60% { text-shadow: .25em 0 0 var(--text-color), .5em 0 0 rgba(0,0,0,0); }
+  80%, 100% { text-shadow: .25em 0 0 var(--text-color), .5em 0 0 var(--text-color); }
+}
+
+.chatbot-footer {
+    display: flex;
+    padding: 0.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+#chatbot-input {
+    flex-grow: 1;
+    border: none;
+    background: none;
+    padding: 0.5rem;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+#chatbot-input:focus { outline: none; }
+/* --- 12. Course Card Icons --- */
+
+.course-header-icon {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-right: 0.75rem;
+    opacity: 0.7;
+}
+
+.empty-state {
+    grid-column: 1 / -1; /* Span all columns */
+    text-align: center;
+    padding: 3rem;
+    background-color: var(--surface-color);
+    border: 1px dashed var(--border-color);
+    border-radius: var(--border-radius);
+}
+/* --- 15. Admin Panel --- */
+.table-container {
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    overflow-x: auto;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+th, td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+thead {
+    background-color: var(--bg-color);
+}
+.role-tag {
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+.role-admin { background-color: #ef4444; color: white; }
+.role-teacher { background-color: #3b82f6; color: white; }
+.role-student { background-color: #84cc16; color: white; }
+/* --- 16. Delete Button --- */
+.btn-danger {
+    background-color: #ef4444; /* Red */
+    color: white;
+}
+.btn-danger:hover {
+    background-color: #dc2626; /* Darker Red */
+    transform: translateY(-2px);
+}
+/* --- 17. Admin Role Change Form --- */
+.role-change-form {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.role-select {
+    padding: 0.4rem;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: inherit;
+}
+
+.text-muted {
+    color: var(--muted-text-color);
+    font-style: italic;
+    font-size: 0.9rem;
+}
+/* --- 18. Messaging System --- */
+
+.messaging-container {
+    display: grid;
+    grid-template-columns: 300px 1fr; /* Sidebar and main chat */
+    height: 75vh;
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.conversations-panel {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border-color);
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-color);
+}
+
+.panel-header h3 {
+    font-size: 1.2rem;
+    margin: 0;
+}
+
+.conversations-list {
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+.conversation-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    cursor: pointer;
+    text-decoration: none;
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.3s ease;
+}
+
+.conversation-item:hover {
+    background-color: var(--bg-color);
+}
+
+.conversation-item.active {
+    background-color: color-mix(in srgb, var(--primary-color) 10%, transparent);
+}
+
+.convo-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.convo-info {
+    overflow: hidden;
+}
+
+.convo-username {
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.convo-preview {
+    font-size: 0.9rem;
+    color: var(--muted-text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+}
+
+.chat-panel {
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-body {
+    flex-grow: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.chat-message-wrapper {
+    display: flex;
+}
+
+.chat-message {
+    max-width: 70%;
+    padding: 0.75rem 1rem;
+    border-radius: var(--border-radius);
+    line-height: 1.4;
+}
+.chat-message p { margin: 0; }
+
+.received {
+    background-color: var(--bg-color);
+    border-bottom-left-radius: 0;
+}
+.sent {
+    background-color: var(--primary-color);
+    color: white;
+    border-bottom-right-radius: 0;
+}
+
+.chat-message-wrapper:has(.sent) {
+    justify-content: flex-end;
+}
+
+.message-timestamp {
+    display: block;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    color: var(--muted-text-color);
+    text-align: right;
+}
+.sent .message-timestamp {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.chat-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border-top: 1px solid var(--border-color);
+}
+
+#message-input {
+    flex-grow: 1;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-color);
+    padding: 0.6rem;
+    border-radius: var(--border-radius);
+    resize: none;
+    font-family: inherit;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+#message-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+/* --- 19. Chat Placeholder --- */
+.chat-placeholder {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    color: var(--muted-text-color);
+    text-align: center;
+}
+.chat-placeholder i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+/* --- 20. Notifications & Admin Actions --- */
+.notification-bell {
+    position: relative;
+    font-size: 1.2rem;
+    color: var(--muted-text-color);
+    margin-right: 1rem;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+.notification-count {
+    position: absolute;
+    top: -5px;
+    right: -10px;
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.notifications-list { display: flex; flex-direction: column; gap: 1rem; }
+.notification-item { display: flex; align-items: center; gap: 1rem; padding: 1rem; background-color: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--border-radius); }
+.notification-item.unread { border-left: 4px solid var(--primary-color); font-weight: 600; }
+.notification-icon { font-size: 1.5rem; color: var(--primary-color); }
+.notification-content { flex-grow: 1; }
+.notification-content p { margin: 0; }
+.notification-date { font-size: 0.8rem; color: var(--muted-text-color); font-weight: 400; }
+.banned-user td { text-decoration: line-through; color: var(--muted-text-color) !important; opacity: 0.6; }
+.btn-warning { background-color: #f59e0b; color: white; }
+.btn-warning:hover { background-color: #d97706; }
+.action-buttons { display: flex; gap: 0.5rem; }
+/* --- 21. Performance & Settings Pages --- */
+.settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+.profile-picture-uploader {
+    text-align: center;
+}
+.profile-avatar-preview {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 1rem;
+    border: 3px solid var(--border-color);
+}
+.profile-picture-uploader input[type="file"] {
+    display: block;
+    margin: 0 auto;
+    max-width: 250px;
+}
+.form-group small {
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+}
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+.stats-grid .stat-card {
+    background-color: var(--surface-color);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+.stats-grid .stat-card h3 {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+}
+.stats-grid .stat-card p {
+    color: var(--muted-text-color);
+    font-weight: 500;
+}
+/* In static/css/style.css */
+
+.nav-avatar {
+    width: 50px;  /* Changed from 40px */
+    height: 50px; /* Changed from 40px */
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--border-color);
+}
+.profile-link {
+    display: block;
+}
+.progress-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+.progress-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 500;
+}
+.progress-bar-container {
+    width: 100%;
+    height: 10px;
+    background-color: var(--bg-color);
+    border-radius: 999px;
+    overflow: hidden;
+}
+.progress-bar {
+    height: 100%;
+    background-color: var(--primary-color);
+    border-radius: 999px;
+}
+
+@media (max-width: 768px) {
+    .settings-grid {
+        grid-template-columns: 1fr;
+    }
+}
+/* --- 23. Course-Specific Chatbot --- */
+.right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+.course-chatbot-container {
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    display: flex;
+    flex-direction: column;
+    height: 400px; /* Or adjust as needed */
+}
+.course-chatbot-container h3 {
+    padding: 1rem;
+    margin: 0;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+#course-chat-body {
+    flex-grow: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+#course-chat-input {
+    flex-grow: 1;
+    border: none;
+    background: none;
+    padding: 0.5rem;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+#course-chat-input:focus { outline: none; }
+/* --- 18. Messaging System (Continued) --- */
+
+.convo-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+/* --- 25. Assignments System --- */
+
+.tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1.5rem;
+}
+.tab-link {
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--muted-text-color);
+    border-bottom: 3px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.tab-link.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+.tab-content {
+    display: none; /* Hidden by default */
+}
+.assignments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+.assignment-item {
+    display: flex;
+    gap: 1rem;
+    background-color: var(--surface-color);
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+}
+.assignment-icon {
+    font-size: 1.5rem;
+    color: var(--secondary-color);
+}
+.assignment-info h4 {
+    margin-bottom: 0.5rem;
+}
+.assignment-info p {
+    color: var(--muted-text-color);
+    margin-bottom: 1rem;
+}
+.due-date {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--danger-color);
+}
+.form-divider {
+    margin: 1.5rem 0;
+    border: 0;
+    border-top: 1px solid var(--border-color);
+}
+/* --- 26. Assignment Attachments --- */
+.assignment-footer {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+.assignment-footer .due-date {
+    margin-left: auto; /* Pushes the due date to the right */
+}
+/* --- 27. Contact Page --- */
+.contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+.contact-info-card {
+    background-color: var(--surface-color);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.contact-info-card h3 {
+    margin-bottom: 0.5rem;
+}
+
+.contact-info-card p {
+    color: var(--muted-text-color);
+    margin-bottom: 2rem;
+}
+
+.info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.info-item i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-top: 5px;
+}
+
+.info-item h4 {
+    margin-bottom: 0.25rem;
+}
+
+.info-item a {
+    color: var(--secondary-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.social-links {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.social-links a {
+    font-size: 1.5rem;
+    color: var(--muted-text-color);
+    transition: color 0.3s ease;
+}
+
+.social-links a:hover {
+    color: var(--primary-color);
+}
+
+@media (max-width: 768px) {
+    .contact-grid {
+        grid-template-columns: 1fr;
+    }
+}
+/* --- 27. Assignment Submissions & Grading --- */
+.submission-area {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--border-color);
+}
+.submission-form {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+.submission-status {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+.submission-status.graded-true {
+    color: var(--secondary-color);
+}
+.feedback-box {
+    background-color: var(--bg-color);
+    border-radius: var(--border-radius);
+    padding: 0.75rem;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+}
+.teacher-submission-link {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+}
+.teacher-submission-link a {
+    color: var(--primary-color);
+    font-weight: 600;
+    text-decoration: none;
+}
+.grade-input, .feedback-input {
+    width: 100%;
+    padding: 0.4rem;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+}
+/* --- 28. DYNAMIC DASHBOARD --- */
+
+.dynamic-dashboard-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+.dashboard-main-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.context-card {
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+}
+
+.context-card h4 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.context-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.context-item a {
+    font-weight: 600;
+    color: var(--text-color);
+    text-decoration: none;
+    display: block;
+}
+.context-item a:hover {
+    color: var(--primary-color);
+}
+
+.context-meta {
+    font-size: 0.85rem;
+    color: var(--muted-text-color);
+}
+
+@media (max-width: 992px) {
+    .dynamic-dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 576px) {
+    .dashboard-main-actions {
+        grid-template-columns: 1fr;
+    }
+}
+/* --- 29. UI POLISH & UX IMPROVEMENTS --- */
+
+/* Dismissible Alerts */
+.alert {
+    position: relative;
+    padding-right: 3rem; /* Make space for the close button */
+}
+
+.alert .btn-close {
+    position: absolute;
+    top: 50%;
+    right: 1rem;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: inherit;
+    opacity: 0.7;
+    cursor: pointer;
+}
+
+.alert .btn-close:hover {
+    opacity: 1;
+}
+
+/* Enhanced Empty State */
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem 2rem;
+    background-color: var(--surface-color);
+    border: 1px dashed var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--muted-text-color);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.empty-state p {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+/* Admin Actions Polish */
+.action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+/* --- 31. ENROLLED STUDENTS PAGE --- */
+
+.user-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.table-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.badge-danger, .badge-success {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: white;
+    display: inline-block;
+}
+
+.badge-danger {
+    background-color: #ef4444; /* Red */
+}
+
+.badge-success {
+    background-color: #22c55e; /* Green */
+}
+/* --- 32. STUDENT DETAIL PAGE --- */
+
+.user-cell-link {
+    text-decoration: none;
+    color: inherit;
+    display: inline-block;
+    transition: all 0.2s ease;
+    border-radius: var(--border-radius);
+}
+
+.user-cell-link:hover {
+    background-color: var(--bg-color);
+}
+
+.status-badge {
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.status-badge.graded { background-color: var(--secondary-color); color: white; }
+.status-badge.submitted { background-color: #3b82f6; color: white; }
+.status-badge.pending { background-color: #f59e0b; color: white; }
+.status-badge.missing { background-color: #ef4444; color: white; }
+/* --- 33. QUIZ SYSTEM --- */
+.quiz-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+}
+.question-card {
+    margin-top: 1.5rem;
+    border: 1px solid var(--border-color);
+}
+.question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+.quiz-question-block {
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+.quiz-question-block:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+.quiz-options .form-check {
+    margin-bottom: 0.5rem;
+}
+.result-option.correct-answer label {
+    font-weight: bold;
+    color: var(--secondary-color);
+}
+.result-option.wrong-answer {
+    background-color: color-mix(in srgb, #ef4444 15%, transparent);
+    border-radius: var(--border-radius);
+    padding: 0.25rem 0.5rem;
+}
+.result-option .fa-check { color: var(--secondary-color); }
+.result-option .fa-times { color: #ef4444; }

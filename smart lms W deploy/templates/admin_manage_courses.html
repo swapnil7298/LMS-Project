@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Manage Courses{% endblock %}
+{% block content %}
+<section class="page-section">
+    <div class="container">
+        <div class="page-header">
+            <h1>Manage All Courses</h1>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back to Admin Dashboard</a>
+        </div>
+        <div class="courses-grid">
+            {% for course in courses %}
+            <div class="course-card">
+                <div class="course-card-header">
+                    <i class="fas {{ course.icon }} course-header-icon"></i>
+                    <span class="course-tag">{{ course.category }}</span>
+                </div>
+                <div class="course-card-body">
+                    <h3>{{ course.title }}</h3>
+                    <p>{{ course.description }}</p>
+                </div>
+                <div class="course-card-footer">
+                    <a href="{{ url_for('course_detail', course_id=course._id) }}" class="btn btn-secondary btn-sm">View & Edit</a>
+                    <!-- NEW: Delete form and button -->
+                    <form action="{{ url_for('delete_course', course_id=course._id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure? This will delete the course and all its materials permanently.');">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

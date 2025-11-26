@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Courses{% endblock %}
+
+{% block content %}
+<section class="page-section">
+    <div class="container">
+        <div class="page-header">
+            <h1>Enroll in New Courses</h1>
+            <a href="{{ url_for('my_courses') }}" class="btn btn-secondary">Back to My Courses</a>
+        </div>
+
+        <div class="courses-grid">
+            {% for course in courses %}
+            <div class="course-card">
+                <div class="course-card-header">
+                    <!-- Display the course icon -->
+                    <i class="fas {{ course.icon }} course-header-icon"></i>
+                    <span class="course-tag">{{ course.category }}</span>
+                </div>
+                <div class="course-card-body">
+                    <h3>{{ course.title }}</h3>
+                    <p>{{ course.description }}</p>
+                </div>
+                <div class="course-card-footer">
+                    <!-- Form to request enrollment -->
+                    <form action="{{ url_for('request_enrollment', course_id=course._id) }}" method="POST" style="display: inline;">
+                        <button type="submit" class="btn btn-primary btn-sm">Request to Enroll</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+
+            {% if not courses %}
+            <div class="empty-state">
+                <p>There are no new courses to enroll in. You're all caught up!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

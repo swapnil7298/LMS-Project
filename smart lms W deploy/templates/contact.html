@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Contact Us{% endblock %}
+{% block content %}
+<section class="page-section">
+    <div class="container">
+        <div class="page-header">
+            <h1>Get in Touch</h1>
+        </div>
+
+        <div class="contact-grid">
+            <!-- Left Column: Contact Info -->
+            <div class="contact-info-card">
+                <h3>Contact Information</h3>
+                <p>Have a question or need support? Reach out to us through any of the channels below.</p>
+                
+                <div class="info-item">
+                    <i class="fas fa-envelope"></i>
+                    <div>
+                        <h4>Admin Email</h4>
+                        <a href="mailto:swapnilrao729@gmail.com">swapnilrao729@gmail.com</a>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <i class="fas fa-users"></i>
+                    <div>
+                        <h4>Social Media</h4>
+                        <div class="social-links">
+                            <!-- UPDATE: Add your actual LinkedIn URL here -->
+                            <a href="https://www.linkedin.com/in/swapnil-rao-42983b286/" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                            <!-- UPDATE: Add your actual GitHub URL here -->
+                            <a href="https://github.com/swapnil7298" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
+                            <!-- Twitter link has been removed -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NEW: Resume Button -->
+                <div class="info-item">
+                    <i class="fas fa-file-alt"></i>
+                    <div>
+                        <h4>My Resume</h4>
+                        <!-- UPDATE: Add a link to your resume PDF or website here -->
+                        <a href="https://drive.google.com/file/d/1BDw2vNpls0-3-9CD5ptRiaV9GFXtSuKT/view?usp=sharing" target="_blank" class="btn btn-secondary btn-sm" style="margin-top: 5px;">View Resume</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Contact Form -->
+            <div class="form-container-card">
+                <h3>Send us a Message</h3>
+                <form action="{{ url_for('contact') }}" method="POST">
+                    <div class="form-group">
+                        <label for="name">Your Name</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact_email">Your Email</label>
+                        <input type="email" id="contact_email" name="contact_email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Message</label>
+                        <textarea id="message" name="message" rows="5" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Submit Message</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

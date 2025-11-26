@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Create a New Course{% endblock %}
+
+{% block content %}
+<section class="page-section">
+    <div class="container">
+        <div class="page-header">
+            <h1>Create a New Course</h1>
+        </div>
+
+        <div class="form-container-card">
+            <form action="{{ url_for('create_course') }}" method="POST">
+                <!-- Course Title Input -->
+                <div class="form-group">
+                    <label for="course_title">Course Title</label>
+                    <input type="text" id="course_title" name="course_title" placeholder="e.g., Introduction to Python" required>
+                </div>
+
+                <!-- Course Description Input -->
+                <div class="form-group">
+                    <label for="course_description">Course Description</label>
+                    <textarea id="course_description" name="course_description" rows="4" placeholder="Briefly describe what this course is about." required></textarea>
+                </div>
+
+                <!-- Course Category Input -->
+                <div class="form-group">
+                    <label for="course_category">Category / Subject</label>
+                    <input type="text" id="course_category" name="course_category" placeholder="e.g., Computer Science, History, Mathematics" required>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="form-actions">
+                    <a href="{{ url_for('my_courses') }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Create Course</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

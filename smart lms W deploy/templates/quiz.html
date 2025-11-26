@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}Create Quiz{% endblock %}
+{% block content %}
+<section class="page-section">
+    <div class="container">
+        <div class="page-header">
+            <h1>Create Quiz for "{{ material.title }}"</h1>
+            <a href="{{ url_for('course_detail', course_id=material.course_id) }}" class="btn btn-secondary">Cancel</a>
+        </div>
+        
+        <div class="alert alert-info">
+            <i class="fas fa-magic"></i> **Generate Questions with AI:** You can automatically generate **5** questions from the material's content.
+            <button type="button" id="generate-ai-btn" class="btn btn-primary btn-sm ml-3">
+                Generate Questions
+            </button>
+            <span id="ai-loading" class="spinner-border spinner-border-sm text-primary ml-2" role="status" style="display:none;"></span>
+        </div>
+        
+        <form action="{{ url_for('create_quiz', material_id=material._id) }}" method="POST">
+            <div class="form-container-card">
+                <div class="form-group">
+                    <label for="quiz_title">Quiz Title</label>
+                    <input type="text" id="quiz_title" name="quiz_title" value="{{ material.title }} Quiz" required>
+                </div>
+            </div>
+
+            <div id="questions-container">
+                </div>
+
+            <div class="quiz-actions">
+                <button type="button" id="add-question-btn" class="btn btn-secondary">
+                    <i class="fas fa-plus"></i> Add Question
+                </button>
+                <button type="submit" class="btn btn-primary">Save Quiz</button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const questionsContainer = document.getElementById('questions-container');
+    const addQuestionBtn = document.getElementById('add-question-btn');
+    const generateAiBtn = document.getElementById('generate-ai-btn');
+    const aiLoading = document.getElementById('ai-loading');
+    let questionIndex = 0;
+
+    // Function to add a single question card (used for both manual and AI)
+    function addQuestion(text = '', options = ['', '', '', '']) {
+        const questionId = questionIndex++;
+        const questionHtml = `
+            <div class="form-container-card question-card" id="question-card-${questionId}">
+                <div class="question-header">
+                    <h4>Question ${questionId + 1}</h4>
+                    <button type="button" class="btn btn-danger btn-sm remove-question-btn" data-id="${questionId}">Remove</button>
+                </div>
+                <div class="form-group">
+                    <label for="question_text_${questionId}">Question Text</label>
+                    <input type="text" id="question_text_${questionId}" name="question_text_${questionId}" value="${text}" required>
+                </div>
+                <div class="form-group">
+                    <label>Options (Select the correct answer)</label>
+                    <div class="options-container">
+                        ${options.map((opt, i) => `
+                        <div class="input-group mb-2">
+                            <div class="input-group-text">
+                                <input type="radio" name="correct_answer_${questionId}" value="${i}" required>
+                            </div>
+                            <input type="text" class="form-control" name="option_${questionId}" placeholder="Option ${i + 1}" value="${opt}" required>
+                        </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+        questionsContainer.insertAdjacentHTML('beforeend', questionHtml);
+    }
+
+    // --- AI GENERATION LOGIC ---
+    generateAiBtn.addEventListener('click', async function() {
+        if (questionsContainer.children.length > 0 && 
+            !confirm("This will clear all existing questions. Are you sure?")) {
+            return;
+        }
+
+        // Clear existing questions
+        questionsContainer.innerHTML = ''; 
+        questionIndex = 0; // Reset index
+        
+        aiLoading.style.display = 'inline-block';
+        generateAiBtn.disabled = true;
+
+        const materialId = "{{ material._id }}";
+
+        try {
+            const response = await fetch('/api/generate-ai-quiz', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ material_id: materialId })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || data.error) {
+                alert(`AI Generation Error: ${data.error || 'Failed to fetch questions.'}`);
+                // Add one manual question if generation fails
+                addQuestion(); 
+                return;
+            }
+
+            if (data.questions.length > 0) {
+                // The QG model returns only question text. We use empty options for the teacher to fill in.
+                data.questions.forEach(qText => {
+                    addQuestion(qText);
+                });
+                alert(`${data.questions.length} questions generated successfully! Please review and fill in the options and select the correct answer.`);
+            } else {
+                alert("AI generated 0 questions. Please try again or create questions manually.");
+                addQuestion();
+            }
+
+        } catch (error) {
+            console.error('Fetch error:', error);
+            alert("Connection error: Could not reach the AI service. Check if it's running on port 5001.");
+            addQuestion();
+        } finally {
+            aiLoading.style.display = 'none';
+            generateAiBtn.disabled = false;
+        }
+    });
+    // --- END AI GENERATION LOGIC ---
+
+
+    // Add the first question automatically when the page loads
+    addQuestion();
+
+    addQuestionBtn.addEventListener('click', () => addQuestion());
+
+    // Event delegation for remove buttons
+    questionsContainer.addEventListener('click', function(e) {
+        if (e.target && e.target.classList.contains('remove-question-btn')) {
+            const cardId = `question-card-${e.target.dataset.id}`;
+            document.getElementById(cardId).remove();
+            // Re-label questions
+            Array.from(questionsContainer.querySelectorAll('.question-header h4')).forEach((h4, index) => {
+                h4.textContent = `Question ${index + 1}`;
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

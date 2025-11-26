@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Enrollment Requests{% endblock %}
+
+{% block content %}
+<section class="page-section">
+    <div class="container">
+        <div class="page-header">
+            <h1>Enrollment Requests</h1>
+        </div>
+
+        <div class="requests-list">
+            {% for request in requests %}
+            <div class="request-item">
+                <div class="request-info">
+                    <p>
+                        <strong>{{ request.student_name }}</strong> has requested to enroll in 
+                        <strong>{{ request.course_title }}</strong>.
+                    </p>
+                    <span class="request-date">Requested on: {{ request.requested_at.strftime('%d %b %Y') }}</span>
+                </div>
+                <div class="request-actions">
+                    <form action="{{ url_for('handle_request', request_id=request._id, action='approve') }}" method="POST" style="display: inline;">
+                        <button type="submit" class="btn btn-primary btn-sm">Approve</button>
+                    </form>
+                    <form action="{{ url_for('handle_request', request_id=request._id, action='reject') }}" method="POST" style="display: inline;">
+                        <button type="submit" class="btn btn-secondary btn-sm">Reject</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+
+            {% if not requests %}
+            <div class="empty-state">
+                <p>There are no pending enrollment requests.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

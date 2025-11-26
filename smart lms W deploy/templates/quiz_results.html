@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Quiz Results{% endblock %}
+{% block content %}
+<section class="page-section">
+    <div class="container">
+        <div class="page-header">
+            <h1>Results for "{{ quiz.title }}"</h1>
+        </div>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>{{ attempt.score }} / {{ attempt.total_questions }}</h3>
+                <p>Your Score</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ (attempt.score / attempt.total_questions * 100)|round|int }}%</h3>
+                <p>Percentage</p>
+            </div>
+        </div>
+
+        <div class="form-container-card mt-4">
+            <h3>Review Your Answers</h3>
+            {% for result in attempt.results %}
+            <div class="quiz-question-block">
+                <h4>{{ loop.index }}. {{ result.question_text }}</h4>
+                <div class="quiz-options">
+                    {% for option in result.options %}
+                    <div class="form-check result-option 
+                        {% if loop.index0 == result.correct_answer %}correct-answer{% endif %}
+                        {% if loop.index0 == result.user_answer and not result.is_correct %}wrong-answer{% endif %}">
+                        <input class="form-check-input" type="radio" disabled {% if loop.index0 == result.user_answer %}checked{% endif %}>
+                        <label class="form-check-label">
+                            {{ option }}
+                            {% if loop.index0 == result.correct_answer %} <i class="fas fa-check"></i> (Correct Answer){% endif %}
+                            {% if loop.index0 == result.user_answer and not result.is_correct %} <i class="fas fa-times"></i> (Your Answer){% endif %}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

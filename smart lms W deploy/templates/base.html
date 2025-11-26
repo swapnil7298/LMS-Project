@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IntelliLearn - {% block title %}{% endblock %}</title>
+    
+    <link rel="icon" href="{{ url_for('static', filename='assets/logo.svg') }}">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <script>
+      (function() {
+        try {
+          const savedTheme = localStorage.getItem('theme');
+          if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+          }
+        } catch (e) {
+          console.error("Could not apply saved theme.", e);
+        }
+      })();
+    </script>
+    <header>
+        <nav class="container">
+            <a href="{{ url_for('index') }}" class="logo">
+                <img src="{{ url_for('static', filename='assets/logo.svg') }}" alt="IntelliLearn Logo" class="logo-img">
+                IntelliLearn
+            </a>
+            
+            <ul class="nav-links">
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                {% if session.user_id %}
+                <li><a href="{{ url_for('my_courses') }}">My Courses</a></li>
+                <li><a href="{{ url_for('messages') }}">Messages</a></li>
+                {% endif %}
+                <li><a href="{{ url_for('contact') }}">Contact</a></li>
+            </ul>
+            
+            <div class="nav-actions">
+                {% if session.user_id %}
+                    <a href="{{ url_for('notifications') }}" class="notification-bell" title="Notifications">
+                        <i class="fas fa-bell"></i>
+                        {% if unread_notifications > 0 %}
+                        <span class="notification-count">{{ unread_notifications }}</span>
+                        {% endif %}
+                    </a>
+                    
+                    {% if session.role == 'admin' %}
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Admin Panel</a>
+                    {% endif %}
+
+                    <a href="{{ url_for('dashboard') }}" class="profile-link" title="Dashboard">
+    <img src="{{ session.user_avatar or url_for('static', filename='assets/default_avatar.png') }}" alt="My Profile" class="nav-avatar">
+</a>
+
+                    <a href="{{ url_for('logout') }}" class="btn btn-primary">Logout</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-secondary">Login</a>
+                    <a href="{{ url_for('register') }}" class="btn btn-primary">Sign Up</a>
+                {% endif %}
+                <button id="theme-toggle" class="theme-toggle-btn" title="Toggle Theme">
+                    <i class="fas fa-sun"></i>
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="container" style="margin-top: 2rem;">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" aria-label="Close">&times;</button>
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    {% if session.user_id %}
+    <div class="chatbot-container">
+        <div id="chatbot-window" class="chatbot-window">
+            <div class="chatbot-header">
+                <h3>Ask IntelliLearn</h3>
+                <button id="close-chatbot" class="close-chatbot-btn">&times;</button>
+            </div>
+            <div id="chatbot-body" class="chatbot-body">
+                <div class="chat-message bot-message">
+                    <p>Hello! How can I help you today?</p>
+                </div>
+            </div>
+            <div class="chatbot-footer">
+                <input type="text" id="chatbot-input" placeholder="Type your message...">
+                <button id="chatbot-send" class="btn btn-primary"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+        <button id="chatbot-toggle" class="chatbot-toggle-btn">
+            <i class="fas fa-robot"></i>
+        </button>
+    </div>
+    {% endif %}
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 IntelliLearn. All Rights Reserved @ Swapnil Rao.</p>
+        </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

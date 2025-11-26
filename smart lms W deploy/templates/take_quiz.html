@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Take Quiz{% endblock %}
+{% block content %}
+<section class="page-section">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{ quiz.title }}</h1>
+        </div>
+        <div class="form-container-card">
+            <form id="quiz-form">
+                {% for question in questions %}
+                <div class="quiz-question-block">
+                    <h4>{{ loop.index }}. {{ question.text }}</h4>
+                    <div class="quiz-options">
+                        {% for option in question.options %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="question_{{ question._id }}" id="q{{ question._id }}_opt{{ loop.index0 }}" value="{{ loop.index0 }}" required>
+                            <label class="form-check-label" for="q{{ question._id }}_opt{{ loop.index0 }}">
+                                {{ option }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-primary btn-block mt-4">Submit Answers</button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<script>
+document.getElementById('quiz-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const answers = {};
+    for (let [key, value] of formData.entries()) {
+        const questionId = key.replace('question_', '');
+        answers[questionId] = value;
+    }
+
+    fetch(`/api/quiz/{{ quiz._id }}/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answers: answers })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = data.redirect_url;
+        } else {
+            alert('There was an error submitting your quiz.');
+        }
+    });
+});
+</script>
+{% endblock %}

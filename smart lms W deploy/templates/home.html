@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome{% endblock %}
+
+{% block content %}
+
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container hero-content">
+        <h1 class="hero-title">The Future of Learning, Personalized for You</h1>
+        <p class="hero-subtitle">
+            IntelliLearn transforms your study materials into interactive summaries, quizzes, and insights. Stop drowning in information and start learning smarter.
+        </p>
+        <div class="hero-actions">
+            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">Get Started for Free</a>
+            <a href="#features" class="btn btn-secondary btn-lg">Explore Features</a>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="features">
+    <div class="container">
+        <div class="section-header">
+            <h2>Why IntelliLearn is Different</h2>
+            <p>We use AI to give you academic superpowers.</p>
+        </div>
+        <div class="features-grid">
+            <!-- Feature 1: AI Summarizer -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <h3>AI-Powered Summarizer</h3>
+                <p>Instantly condense long documents into key points, so you can grasp core concepts in minutes, not hours.</p>
+            </div>
+            <!-- Feature 2: Quiz Generator -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-question-circle"></i>
+                </div>
+                <h3>Dynamic Quiz Generator</h3>
+                <p>Test your knowledge with on-the-fly quizzes generated from any of your course materials. Turn passive reading into active learning.</p>
+            </div>
+            <!-- Feature 3: Smart Notifications -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <h3>Smart Assignment Alerts</h3>
+                <p>Get notified about new assignments with an AI-calculated difficulty rating, helping you manage your time and prioritize your work.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action (CTA) Section -->
+<section class="cta">
+    <div class="container">
+        <h2>Ready to Revolutionize Your Studies?</h2>
+        <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">Sign Up Now</a>
+    </div>
+</section>
+
+{% endblock %}

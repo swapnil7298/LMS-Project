@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}My Performance{% endblock %}
+{% block content %}
+<section class="page-section">
+    <div class="container">
+        <div class="page-header">
+            <h1>Learning Analytics Hub</h1>
+        </div>
+
+        <!-- Key Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>{{ stats.courses_enrolled }}</h3>
+                <p>Courses Enrolled</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ stats.quizzes_taken }}</h3>
+                <p>Quizzes Taken</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ stats.avg_score }}%</h3>
+                <p>Average Score</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ stats.hours_learned }}</h3>
+                <p>Hours Learned (est.)</p>
+            </div>
+        </div>
+
+        <!-- AI Performance Insights -->
+        <div class="analytics-card">
+            <h3><i class="fas fa-lightbulb"></i> AI-Powered Insights</h3>
+            <p class="text-muted">Here's a summary of your recent activity and performance:</p>
+            <p class="ai-insight">"{{ stats.ai_insight }}"</p>
+        </div>
+
+        <!-- Topic Mastery Heatmap -->
+        <div class="analytics-card">
+            <h3><i class="fas fa-th-large"></i> Topic Mastery</h3>
+            <p class="text-muted">Based on your quiz results across all enrolled courses. (Feature coming soon)</p>
+            <div class="heatmap-grid">
+                <div class="topic-cell" style="background-color: #4ade80;" title="Data Structures: 95%">Data Structures</div>
+                <div class="topic-cell" style="background-color: #facc15;" title="Algorithm Complexity: 68%">Algorithm Complexity</div>
+                <div class="topic-cell" style="background-color: #f87171;" title="Network Protocols: 45%">Network Protocols</div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

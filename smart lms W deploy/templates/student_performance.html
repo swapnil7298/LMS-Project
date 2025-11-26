@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}My Performance{% endblock %}
+{% block content %}
+<section class="page-section">
+    <div class="container">
+        <div class="page-header">
+            <h1>Student Performance Hub</h1>
+        </div>
+
+        <!-- Course Completion Progress -->
+        <div class="analytics-card">
+            <h3><i class="fas fa-tasks"></i> Course Completion</h3>
+            <p class="text-muted">Your progress in each enrolled course based on materials viewed. (This is a placeholder until we track views).</p>
+            <div class="progress-list">
+                {% for course in courses_data %}
+                <div class="progress-item">
+                    <div class="progress-info">
+                        <span class="progress-title">{{ course.title }}</span>
+                        <span class="progress-percent">{{ course.completion }}%</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" style="width: {{ course.completion|default(0) }}%;"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

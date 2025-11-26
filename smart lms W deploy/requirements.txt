@@ -1,0 +1,16 @@
+Flask
+Flask-PyMongo
+python-dotenv
+google-generativeai
+gunicorn
+requests
+werkzeug
+pytz
+PyMuPDF
+dnspython
+Flask-Cors
+torch
+transformers
+sentencepiece
+sentence-transformers
+chromadb

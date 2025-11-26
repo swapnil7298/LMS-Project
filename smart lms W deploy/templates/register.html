@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+    <div class="container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h2>Create Your Account</h2>
+                <p>Join IntelliLearn and start your smart learning journey.</p>
+            </div>
+            <!-- The form points to our API endpoint -->
+            <form class="auth-form" action="/api/register" method="POST">
+                <!-- Username Input -->
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Choose a username" required>
+                </div>
+
+                <!-- Email Input -->
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" placeholder="you@example.com" required>
+                </div>
+                
+                <!-- Password field is removed for OTP system -->
+
+                <!-- Role Selection -->
+                <div class="form-group">
+                    <label>I am a:</label>
+                    <div class="role-selector">
+                        <div class="role-option">
+                            <input type="radio" id="role-student" name="role" value="student" checked>
+                            <label for="role-student">
+                                <i class="fas fa-user-graduate"></i>
+                                <span>Student</span>
+                            </label>
+                        </div>
+                        <div class="role-option">
+                            <input type="radio" id="role-teacher" name="role" value="teacher">
+                            <label for="role-teacher">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                                <span>Teacher</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-primary btn-block">Register</button>
+            </form>
+            <div class="auth-footer">
+                <p>Already have an account? <a href="{{ url_for('login') }}">Log In</a></p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
