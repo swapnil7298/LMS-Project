@@ -500,38 +500,6 @@ def api_register():
     flash(f"A verification code has been sent to {email}.", "success")
     return redirect(url_for('verify_page', email=email))
 
-@app.route('/contact', methods=['GET', 'POST'])
-def contact():
-    if request.method == 'POST':
-        user_name = request.form.get('name')
-        user_email = request.form.get('contact_email')
-        message_body = request.form.get('message')
-        SENDER_EMAIL = os.getenv("SENDER_EMAIL")
-        SENDER_PASSWORD = os.getenv("SENDER_PASSWORD")
-        ADMIN_EMAIL = app.config['ADMIN_EMAIL']
-
-        if not all([SENDER_EMAIL, SENDER_PASSWORD]):
-            flash("The contact form is currently unavailable. Please email the admin directly.", "warning")
-            return render_template('contact.html')
-
-        msg = EmailMessage()
-        msg['Subject'] = f"New Contact Form Message from {user_name}"
-        msg['From'] = SENDER_EMAIL
-        msg['To'] = ADMIN_EMAIL
-        msg.set_content(f"You have a new message from:\n\nName: {user_name}\nEmail: {user_email}\n\nMessage:\n{message_body}")
-
-        try:
-            with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-                smtp.login(SENDER_EMAIL, SENDER_PASSWORD)
-                smtp.send_message(msg)
-            flash("Your message has been sent successfully! We will get back to you shortly.", "success")
-            return redirect(url_for('contact'))
-        except Exception as e:
-            print(f"Contact form email error: {e}")
-            flash("Sorry, there was an error sending your message. Please try again later.", "danger")
-
-    return render_template('contact.html')
-
 @app.route('/my-courses')
 @login_required
 def my_courses():
@@ -1858,4 +1826,5 @@ def send_api_message(conversation_id):
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port, debug=False)
+
 
