@@ -74,17 +74,26 @@ with app.app_context():
 # --- Improved Email Functions with Brevo SMTP ---
 # --- Improved Email Functions with Resend API ---
 import requests
-
-# --- Improved Email Functions with Brevo SMTP ---
+# --- Fixed Email Function with Your Brevo Credentials ---
 def send_otp_email(recipient_email, otp):
-    # Brevo SMTP configuration (FREE - 300 emails/day)
+    # Use your Brevo SMTP configuration from environment variables
     SMTP_SERVER = "smtp-relay.brevo.com"
     SMTP_PORT = 587
-    SMTP_USERNAME = "xsmtpsib-f4ffc6f06b4c94f28dcf732aa9262122e5b0153f0917722828b5a92c9046c3e2@brevo.com"
-    SMTP_PASSWORD = "E6K3PgsBEZBJKZjf"
-    SENDER_EMAIL = "swapnilrao729@gmail.com"
+    SMTP_USERNAME = os.getenv('BREVO_SMTP_USERNAME')  # This should be your Brevo username
+    SMTP_PASSWORD = os.getenv('BREVO_SMTP_PASSWORD')  # Your Brevo SMTP password
+    SENDER_EMAIL = os.getenv('SENDER_EMAIL', 'swapnilrao729@gmail.com')  # Your verified sender email
+    
+    # Debug info (remove in production)
+    print(f"🔧 Email Config: Server={SMTP_SERVER}, Username={SMTP_USERNAME}, Sender={SENDER_EMAIL}")
+    
+    if not all([SMTP_USERNAME, SMTP_PASSWORD, SENDER_EMAIL]):
+        print("❌ Missing email configuration. Using fallback.")
+        print(f"📧 FALLBACK OTP for {recipient_email}: {otp}")
+        return True
     
     message = f"""Subject: Your IntelliLearn Verification Code
+From: {SENDER_EMAIL}
+To: {recipient_email}
 
 Your One-Time Password (OTP) is: {otp}
 
@@ -96,14 +105,14 @@ Best regards,
 IntelliLearn Team
 """
     
-    # Try multiple times with increasing timeouts
-    timeouts = [10, 15, 20]  # seconds
+    # Try with increasing timeouts
+    timeouts = [10, 15, 20]
     
     for attempt, timeout_val in enumerate(timeouts, 1):
         try:
-            print(f"🔄 Attempt {attempt}: Sending OTP email to {recipient_email} (timeout: {timeout_val}s)")
+            print(f"🔄 Attempt {attempt}: Sending OTP to {recipient_email} via Brevo (timeout: {timeout_val}s)")
             
-            # Connect to Brevo SMTP with increased timeout
+            # Connect to Brevo SMTP
             smtp = smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=timeout_val)
             smtp.ehlo()
             smtp.starttls()
@@ -118,14 +127,15 @@ IntelliLearn Team
         except socket.timeout:
             print(f"⏰ Timeout on attempt {attempt}, retrying...")
             continue
+        except smtplib.SMTPAuthenticationError as e:
+            print(f"❌ SMTP Authentication failed: {e}")
+            break  # Don't retry auth errors
         except Exception as e:
-            print(f"❌ Email failed on attempt {attempt}: {e}")
-            if attempt == len(timeouts):  # Last attempt failed
-                # Fallback: log OTP to console
-                print(f"📧 FALLBACK OTP for {recipient_email}: {otp}")
-                return True  # Return True to allow registration
+            print(f"❌ Email failed on attempt {attempt}: {str(e)}")
+            if attempt == len(timeouts):  # Last attempt
+                break
     
-    # If all attempts failed
+    # If all attempts failed, use console fallback
     print(f"📧 FALLBACK OTP for {recipient_email}: {otp}")
     return True
 def send_email_async(recipient_email, otp):
@@ -140,7 +150,11 @@ def send_email_async(recipient_email, otp):
     thread.daemon = True
     thread.start()
     return True
-
+# Debug email configuration
+print(f"🔧 EMAIL CONFIG DEBUG:")
+print(f"   BREVO_USERNAME: {'✅ Set' if os.getenv('BREVO_SMTP_USERNAME') else '❌ Missing'}")
+print(f"   BREVO_PASSWORD: {'✅ Set' if os.getenv('BREVO_SMTP_PASSWORD') else '❌ Missing'}")
+print(f"   SENDER_EMAIL: {'✅ ' + os.getenv('SENDER_EMAIL') if os.getenv('SENDER_EMAIL') else '❌ Missing'}")
 def send_email_async(recipient_email, otp):
     """Send email in a separate thread to avoid blocking main request"""
     def send_wrapper():
@@ -1674,6 +1688,7 @@ def send_api_message(conversation_id):
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port, debug=False)
+
 
 
 
