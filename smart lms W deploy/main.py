@@ -74,120 +74,124 @@ with app.app_context():
 # --- Improved Email Functions with Brevo SMTP ---
 # --- Improved Email Functions with Resend API ---
 import requests
-# --- Improved Email Function using Gmail SMTP ---
+# --- Email Function using Brevo API ---
 def send_otp_email(recipient_email, otp):
-    # Gmail SMTP configuration
-    GMAIL_SMTP_SERVER = "smtp.gmail.com"
-    GMAIL_SMTP_PORT = 587
-    GMAIL_USER = os.getenv('SENDER_EMAIL', 'swapnilrao729@gmail.com')
-    GMAIL_PASSWORD = os.getenv('SENDER_PASSWORD')  # Your Gmail app password
+    BREVO_API_KEY = os.getenv('BREVO_API_KEY')  # Your Brevo API key
+    SENDER_EMAIL = os.getenv('SENDER_EMAIL', 'swapnilrao729@gmail.com')
+    SENDER_NAME = "IntelliLearn"
     
-    # Debug info
-    print(f"🔧 Email Config: Using Gmail SMTP")
-    print(f"   Sender: {GMAIL_USER}")
-    print(f"   Password: {'✅ Set' if GMAIL_PASSWORD else '❌ Missing'}")
+    print(f"🔧 Using Brevo API for: {recipient_email}")
     
-    if not GMAIL_PASSWORD:
-        print("❌ Gmail password missing. Using fallback.")
+    if not BREVO_API_KEY:
+        print("❌ Brevo API key missing. Using fallback.")
         print(f"📧 FALLBACK OTP for {recipient_email}: {otp}")
         return True
-    
-    message = f"""Subject: Your IntelliLearn Verification Code
-From: IntelliLearn <{GMAIL_USER}>
-To: {recipient_email}
 
-Your One-Time Password (OTP) is: {otp}
-
-This code will expire in 10 minutes.
-
-If you didn't request this code, please ignore this email.
-
-Best regards,
-IntelliLearn Team
-"""
-    
-    # Try with increasing timeouts
-    timeouts = [10, 15, 20]
-    
-    for attempt, timeout_val in enumerate(timeouts, 1):
-        try:
-            print(f"🔄 Attempt {attempt}: Sending OTP to {recipient_email} via Gmail (timeout: {timeout_val}s)")
+    try:
+        # Brevo API endpoint
+        url = "https://api.brevo.com/v3/smtp/email"
+        
+        # Email payload for Brevo API
+        payload = {
+            "sender": {
+                "name": SENDER_NAME,
+                "email": SENDER_EMAIL
+            },
+            "to": [
+                {
+                    "email": recipient_email,
+                    "name": recipient_email.split('@')[0]
+                }
+            ],
+            "subject": "Your IntelliLearn Verification Code",
+            "htmlContent": f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                    .header {{ background: #2563eb; color: white; padding: 20px; text-align: center; }}
+                    .content {{ padding: 20px; }}
+                    .otp-code {{ 
+                        font-size: 32px; 
+                        font-weight: bold; 
+                        color: #2563eb; 
+                        text-align: center; 
+                        margin: 30px 0;
+                        letter-spacing: 5px;
+                    }}
+                    .footer {{ 
+                        margin-top: 30px; 
+                        padding-top: 20px; 
+                        border-top: 1px solid #e5e7eb;
+                        font-size: 14px;
+                        color: #6b7280;
+                    }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>IntelliLearn</h1>
+                    </div>
+                    <div class="content">
+                        <h2>Your Verification Code</h2>
+                        <p>Use the following verification code to complete your registration:</p>
+                        <div class="otp-code">{otp}</div>
+                        <p>This code will expire in <strong>10 minutes</strong>.</p>
+                        <p>If you didn't request this code, please ignore this email.</p>
+                    </div>
+                    <div class="footer">
+                        <p>Best regards,<br><strong>The IntelliLearn Team</strong></p>
+                        <p><small>This is an automated message, please do not reply to this email.</small></p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+        }
+        
+        headers = {
+            "accept": "application/json",
+            "content-type": "application/json",
+            "api-key": BREVO_API_KEY
+        }
+        
+        print(f"🔄 Sending email via Brevo API to {recipient_email}...")
+        
+        # Make HTTP request to Brevo API
+        response = requests.post(url, json=payload, headers=headers, timeout=30)
+        
+        if response.status_code == 201:
+            print(f"✅ Email sent successfully via Brevo API!")
+            return True
+        else:
+            print(f"❌ Brevo API failed with status {response.status_code}: {response.text}")
             
-            # Connect to Gmail SMTP
-            smtp = smtplib.SMTP(GMAIL_SMTP_SERVER, GMAIL_SMTP_PORT, timeout=timeout_val)
-            smtp.ehlo()
-            smtp.starttls()
-            smtp.ehlo()
-            smtp.login(GMAIL_USER, GMAIL_PASSWORD)
-            smtp.sendmail(GMAIL_USER, recipient_email, message)
-            smtp.quit()
+            # Provide specific error guidance
+            if response.status_code == 401:
+                print("💡 Authentication failed. Please check your Brevo API key.")
+            elif response.status_code == 402:
+                print("💡 Payment required. Check your Brevo account balance.")
+            elif response.status_code == 403:
+                print("💡 Access forbidden. Check API key permissions.")
+            elif response.status_code == 429:
+                print("💡 Rate limit exceeded. Try again later.")
             
-            print(f"✅ Email sent successfully to {recipient_email}!")
+            # Fallback to console
+            print(f"📧 FALLBACK OTP for {recipient_email}: {otp}")
             return True
             
-        except smtplib.SMTPAuthenticationError as e:
-            print(f"❌ Gmail SMTP Authentication failed: {e}")
-            print("💡 Make sure you're using an App Password, not your regular Gmail password")
-            break  # Don't retry auth errors
-        except socket.timeout:
-            print(f"⏰ Timeout on attempt {attempt}, retrying...")
-            continue
-        except Exception as e:
-            print(f"❌ Gmail failed on attempt {attempt}: {str(e)}")
-            if attempt == len(timeouts):  # Last attempt
-                break
-    
-    # If Gmail fails, try Brevo as fallback
-    print("🔄 Gmail failed, trying Brevo fallback...")
-    if send_via_brevo_fallback(recipient_email, otp):
+    except requests.exceptions.Timeout:
+        print(f"⏰ Brevo API timeout. Using fallback.")
+        print(f"📧 FALLBACK OTP for {recipient_email}: {otp}")
         return True
-    
-    # If all attempts failed, use console fallback
-    print(f"📧 FALLBACK OTP for {recipient_email}: {otp}")
-    return True
-
-def send_via_brevo_fallback(recipient_email, otp):
-    """Brevo fallback if Gmail fails"""
-    try:
-        BREVO_SMTP_SERVER = "smtp-relay.brevo.com"
-        BREVO_SMTP_PORT = 587
-        BREVO_USERNAME = os.getenv('BREVO_SMTP_USERNAME')
-        BREVO_PASSWORD = os.getenv('BREVO_SMTP_PASSWORD')
-        SENDER_EMAIL = os.getenv('SENDER_EMAIL', 'swapnilrao729@gmail.com')
-        
-        if not all([BREVO_USERNAME, BREVO_PASSWORD]):
-            return False
-            
-        print("🔄 Trying Brevo SMTP fallback...")
-        
-        message = f"""Subject: Your IntelliLearn Verification Code
-From: {SENDER_EMAIL}
-To: {recipient_email}
-
-Your One-Time Password (OTP) is: {otp}
-
-This code will expire in 10 minutes.
-
-If you didn't request this code, please ignore this email.
-
-Best regards,
-IntelliLearn Team
-"""
-        
-        smtp = smtplib.SMTP(BREVO_SMTP_SERVER, BREVO_SMTP_PORT, timeout=15)
-        smtp.ehlo()
-        smtp.starttls()
-        smtp.ehlo()
-        smtp.login(BREVO_USERNAME, BREVO_PASSWORD)
-        smtp.sendmail(SENDER_EMAIL, recipient_email, message)
-        smtp.quit()
-        
-        print("✅ Email sent via Brevo fallback!")
-        return True
-        
     except Exception as e:
-        print(f"❌ Brevo fallback also failed: {e}")
-        return False
+        print(f"❌ Brevo API error: {str(e)}")
+        print(f"📧 FALLBACK OTP for {recipient_email}: {otp}")
+        return True
 def send_email_async(recipient_email, otp):
     """Send email in a separate thread"""
     def send_wrapper():
@@ -202,9 +206,10 @@ def send_email_async(recipient_email, otp):
     return True
 # Debug email configuration
 # Debug email configuration
+# Debug email configuration
 print(f"🔧 EMAIL CONFIG DEBUG:")
-print(f"   GMAIL_USER: ✅ {os.getenv('SENDER_EMAIL', 'swapnilrao729@gmail.com')}")
-print(f"   GMAIL_PASSWORD: {'✅ Set' if os.getenv('SENDER_PASSWORD') else '❌ Missing'}")
+print(f"   BREVO_API_KEY: {'✅ Set' if os.getenv('BREVO_API_KEY') else '❌ Missing'}")
+print(f"   SENDER_EMAIL: ✅ {os.getenv('SENDER_EMAIL', 'swapnilrao729@gmail.com')}")
 print(f"   BREVO_USERNAME: {'✅ Set' if os.getenv('BREVO_SMTP_USERNAME') else '❌ Missing'}")
 print(f"   BREVO_PASSWORD: {'✅ Set' if os.getenv('BREVO_SMTP_PASSWORD') else '❌ Missing'}")
 def send_email_async(recipient_email, otp):
@@ -1740,6 +1745,7 @@ def send_api_message(conversation_id):
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port, debug=False)
+
 
 
 
