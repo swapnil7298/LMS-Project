@@ -74,25 +74,26 @@ with app.app_context():
 # --- Improved Email Functions with Brevo SMTP ---
 # --- Improved Email Functions with Resend API ---
 import requests
-# --- Fixed Email Function with Your Brevo Credentials ---
+# --- Improved Email Function using Gmail SMTP ---
 def send_otp_email(recipient_email, otp):
-    # Use your Brevo SMTP configuration from environment variables
-    SMTP_SERVER = "smtp-relay.brevo.com"
-    SMTP_PORT = 587
-    SMTP_USERNAME = os.getenv('BREVO_SMTP_USERNAME')  # This should be your Brevo username
-    SMTP_PASSWORD = os.getenv('BREVO_SMTP_PASSWORD')  # Your Brevo SMTP password
-    SENDER_EMAIL = os.getenv('SENDER_EMAIL', 'swapnilrao729@gmail.com')  # Your verified sender email
+    # Gmail SMTP configuration
+    GMAIL_SMTP_SERVER = "smtp.gmail.com"
+    GMAIL_SMTP_PORT = 587
+    GMAIL_USER = os.getenv('SENDER_EMAIL', 'swapnilrao729@gmail.com')
+    GMAIL_PASSWORD = os.getenv('SENDER_PASSWORD')  # Your Gmail app password
     
-    # Debug info (remove in production)
-    print(f"🔧 Email Config: Server={SMTP_SERVER}, Username={SMTP_USERNAME}, Sender={SENDER_EMAIL}")
+    # Debug info
+    print(f"🔧 Email Config: Using Gmail SMTP")
+    print(f"   Sender: {GMAIL_USER}")
+    print(f"   Password: {'✅ Set' if GMAIL_PASSWORD else '❌ Missing'}")
     
-    if not all([SMTP_USERNAME, SMTP_PASSWORD, SENDER_EMAIL]):
-        print("❌ Missing email configuration. Using fallback.")
+    if not GMAIL_PASSWORD:
+        print("❌ Gmail password missing. Using fallback.")
         print(f"📧 FALLBACK OTP for {recipient_email}: {otp}")
         return True
     
     message = f"""Subject: Your IntelliLearn Verification Code
-From: {SENDER_EMAIL}
+From: IntelliLearn <{GMAIL_USER}>
 To: {recipient_email}
 
 Your One-Time Password (OTP) is: {otp}
@@ -110,34 +111,83 @@ IntelliLearn Team
     
     for attempt, timeout_val in enumerate(timeouts, 1):
         try:
-            print(f"🔄 Attempt {attempt}: Sending OTP to {recipient_email} via Brevo (timeout: {timeout_val}s)")
+            print(f"🔄 Attempt {attempt}: Sending OTP to {recipient_email} via Gmail (timeout: {timeout_val}s)")
             
-            # Connect to Brevo SMTP
-            smtp = smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=timeout_val)
+            # Connect to Gmail SMTP
+            smtp = smtplib.SMTP(GMAIL_SMTP_SERVER, GMAIL_SMTP_PORT, timeout=timeout_val)
             smtp.ehlo()
             smtp.starttls()
             smtp.ehlo()
-            smtp.login(SMTP_USERNAME, SMTP_PASSWORD)
-            smtp.sendmail(SENDER_EMAIL, recipient_email, message)
+            smtp.login(GMAIL_USER, GMAIL_PASSWORD)
+            smtp.sendmail(GMAIL_USER, recipient_email, message)
             smtp.quit()
             
             print(f"✅ Email sent successfully to {recipient_email}!")
             return True
             
+        except smtplib.SMTPAuthenticationError as e:
+            print(f"❌ Gmail SMTP Authentication failed: {e}")
+            print("💡 Make sure you're using an App Password, not your regular Gmail password")
+            break  # Don't retry auth errors
         except socket.timeout:
             print(f"⏰ Timeout on attempt {attempt}, retrying...")
             continue
-        except smtplib.SMTPAuthenticationError as e:
-            print(f"❌ SMTP Authentication failed: {e}")
-            break  # Don't retry auth errors
         except Exception as e:
-            print(f"❌ Email failed on attempt {attempt}: {str(e)}")
+            print(f"❌ Gmail failed on attempt {attempt}: {str(e)}")
             if attempt == len(timeouts):  # Last attempt
                 break
+    
+    # If Gmail fails, try Brevo as fallback
+    print("🔄 Gmail failed, trying Brevo fallback...")
+    if send_via_brevo_fallback(recipient_email, otp):
+        return True
     
     # If all attempts failed, use console fallback
     print(f"📧 FALLBACK OTP for {recipient_email}: {otp}")
     return True
+
+def send_via_brevo_fallback(recipient_email, otp):
+    """Brevo fallback if Gmail fails"""
+    try:
+        BREVO_SMTP_SERVER = "smtp-relay.brevo.com"
+        BREVO_SMTP_PORT = 587
+        BREVO_USERNAME = os.getenv('BREVO_SMTP_USERNAME')
+        BREVO_PASSWORD = os.getenv('BREVO_SMTP_PASSWORD')
+        SENDER_EMAIL = os.getenv('SENDER_EMAIL', 'swapnilrao729@gmail.com')
+        
+        if not all([BREVO_USERNAME, BREVO_PASSWORD]):
+            return False
+            
+        print("🔄 Trying Brevo SMTP fallback...")
+        
+        message = f"""Subject: Your IntelliLearn Verification Code
+From: {SENDER_EMAIL}
+To: {recipient_email}
+
+Your One-Time Password (OTP) is: {otp}
+
+This code will expire in 10 minutes.
+
+If you didn't request this code, please ignore this email.
+
+Best regards,
+IntelliLearn Team
+"""
+        
+        smtp = smtplib.SMTP(BREVO_SMTP_SERVER, BREVO_SMTP_PORT, timeout=15)
+        smtp.ehlo()
+        smtp.starttls()
+        smtp.ehlo()
+        smtp.login(BREVO_USERNAME, BREVO_PASSWORD)
+        smtp.sendmail(SENDER_EMAIL, recipient_email, message)
+        smtp.quit()
+        
+        print("✅ Email sent via Brevo fallback!")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Brevo fallback also failed: {e}")
+        return False
 def send_email_async(recipient_email, otp):
     """Send email in a separate thread"""
     def send_wrapper():
@@ -151,10 +201,12 @@ def send_email_async(recipient_email, otp):
     thread.start()
     return True
 # Debug email configuration
+# Debug email configuration
 print(f"🔧 EMAIL CONFIG DEBUG:")
+print(f"   GMAIL_USER: ✅ {os.getenv('SENDER_EMAIL', 'swapnilrao729@gmail.com')}")
+print(f"   GMAIL_PASSWORD: {'✅ Set' if os.getenv('SENDER_PASSWORD') else '❌ Missing'}")
 print(f"   BREVO_USERNAME: {'✅ Set' if os.getenv('BREVO_SMTP_USERNAME') else '❌ Missing'}")
 print(f"   BREVO_PASSWORD: {'✅ Set' if os.getenv('BREVO_SMTP_PASSWORD') else '❌ Missing'}")
-print(f"   SENDER_EMAIL: {'✅ ' + os.getenv('SENDER_EMAIL') if os.getenv('SENDER_EMAIL') else '❌ Missing'}")
 def send_email_async(recipient_email, otp):
     """Send email in a separate thread to avoid blocking main request"""
     def send_wrapper():
@@ -1688,6 +1740,7 @@ def send_api_message(conversation_id):
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port, debug=False)
+
 
 
 
